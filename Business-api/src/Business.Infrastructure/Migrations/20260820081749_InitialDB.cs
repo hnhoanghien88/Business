@@ -12,11 +12,17 @@ namespace Business.Infrastructure.Migrations
         {
             migrationBuilder.AlterDatabase()
                 .Annotation("MySQL:Charset", "utf8mb4");
+            global::Business.Infrastructure.Persistence.Migrations.EmbeddedSql.ExecuteFolder(
+                migrationBuilder,
+                "Persistence/Sql/Migrations/InitialDB/Up");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            global::Business.Infrastructure.Persistence.Migrations.EmbeddedSql.ExecuteFolder(
+                migrationBuilder,
+                "Persistence/Sql/Migrations/InitialDB/Down");
 
         }
     }

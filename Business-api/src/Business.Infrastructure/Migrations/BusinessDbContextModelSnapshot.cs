@@ -17,6 +17,22 @@ namespace Business.Infrastructure.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            modelBuilder.Entity("Business.Domain.Entities.Product", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Code");
+
+                    b.ToTable("product", (string)null);
+                });
 #pragma warning restore 612, 618
         }
     }
