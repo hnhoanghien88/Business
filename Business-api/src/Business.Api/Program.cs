@@ -1,13 +1,20 @@
 using Business.Api.Middleware;
+using Business.Api.Authentication;
+using Business.Api.Authorization;
 using Business.Application.Common.Behaviors;
 using Business.Application.Restaurant.Products.CreateProduct;
 using Business.Infrastructure;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Json;
 using StackExchange.Redis;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,11 +35,80 @@ builder.Services.AddSingleton(performance);
 
 builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<RateLimitPolicyProvider>();
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
-    options.SwaggerDoc("v1", new() { Title = "Business API", Version = "v1" }));
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "Business API", Version = "v1" });
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "Enter the Business access token returned by Identity POST /login."
+    });
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", document, null)] = []
+    });
+});
+
+var jwt = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
+    ?? throw new InvalidOperationException("JWT configuration is missing.");
+if (string.IsNullOrWhiteSpace(jwt.Issuer)
+    || string.IsNullOrWhiteSpace(jwt.Audience)
+    || Encoding.UTF8.GetByteCount(jwt.Key) < 32)
+    throw new InvalidOperationException("Jwt issuer, audience and a key of at least 32 bytes are required.");
+
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwt.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwt.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Key)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+            NameClaimType = "code",
+            RoleClaimType = "role"
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = context =>
+            {
+                if (context.Principal?.FindFirst("token_type")?.Value != "access")
+                    context.Fail("Only access tokens are accepted.");
+                else if (context.Principal.FindFirst("application_code")?.Value != "Business")
+                    context.Fail("The access token is not issued for Business.");
+                return Task.CompletedTask;
+            }
+        };
+    });
+
+var identityAuthorization = builder.Configuration
+    .GetSection(IdentityAuthorizationOptions.SectionName)
+    .Get<IdentityAuthorizationOptions>()
+    ?? throw new InvalidOperationException("Identity authorization configuration is missing.");
+if (!Uri.TryCreate(identityAuthorization.BaseUrl, UriKind.Absolute, out var identityBaseUri)
+    || string.IsNullOrWhiteSpace(identityAuthorization.ApplicationCode)
+    || identityAuthorization.CacheMinutes <= 0)
+    throw new InvalidOperationException("Identity authorization configuration is invalid.");
+
+builder.Services.Configure<IdentityAuthorizationOptions>(
+    builder.Configuration.GetSection(IdentityAuthorizationOptions.SectionName));
+builder.Services.AddHttpClient<IIdentityPermissionService, IdentityPermissionService>(client =>
+    client.BaseAddress = identityBaseUri);
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+builder.Services.AddAuthorization();
 builder.Services.AddMediatR(configuration =>
 {
     configuration.RegisterServicesFromAssembly(typeof(CreateProductCommand).Assembly);
@@ -68,7 +144,9 @@ app.UseMiddleware<StructuredRequestLoggingMiddleware>();
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseAuthentication();
 app.UseMiddleware<DynamicRateLimitMiddleware>();
+app.UseAuthorization();
 app.MapControllers();
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
 

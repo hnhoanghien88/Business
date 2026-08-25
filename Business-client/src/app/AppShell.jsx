@@ -35,7 +35,7 @@ export function AppShell({ session, path, navigate, onLogout }) {
     setError("");
     setIsLoggingOut(true);
     try {
-      await logout(session.accessToken);
+      await logout();
     } catch (logoutError) {
       setError(logoutError.message);
     } finally {
@@ -90,7 +90,7 @@ export function AppShell({ session, path, navigate, onLogout }) {
         </Box>
         <Box component="main" className="business-content">
           {error && <Alert severity="error">{error}</Alert>}
-          <ProductPage />
+          <ProductPage grantedPermissions={session.authorization?.permissions} />
         </Box>
       </Box>
     </Box>

@@ -156,6 +156,16 @@ button, input { font: inherit; }
 .business-content { min-width: 0; padding: 32px; }
 .product-page { width: 100%; }
 .product-page h1 { margin: 0; color: #343a40; font-size: 24px; font-weight: 650; }
+.product-heading { align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.product-heading .MuiButton-root { white-space: nowrap; text-transform: none; }
+.product-card { overflow: hidden; border: 1px solid #e5e7eb; }
+.product-toolbar { align-items: center; gap: 10px; padding: 18px 20px; border-bottom: 1px solid #e5e7eb; }
+.product-toolbar .MuiTextField-root { width: min(420px, 100%); }
+.product-toolbar .MuiButton-root { text-transform: none; }
+.product-card .MuiTableHead-root { background: #f8fafc; }
+.product-card .MuiTableCell-head { color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.product-code { color: #4b5ed3; font-family: ui-monospace, SFMono-Regular, Consolas, monospace !important; font-size: 13px !important; font-weight: 650 !important; }
+.product-empty { height: 160px; color: #8391a2 !important; }
 
 @media (max-width: 600px) {
   .login-page { padding: 24px 14px 68px; }
@@ -174,4 +184,7 @@ button, input { font: inherit; }
   .business-menu .MuiListItemIcon-root { min-width: 0; }
   .business-topbar { padding: 0 18px; }
   .business-content { padding: 24px 18px; }
+  .product-heading { align-items: flex-start; flex-direction: column !important; }
+  .product-toolbar { align-items: stretch; flex-wrap: wrap; }
+  .product-toolbar .MuiTextField-root { flex: 1 1 100%; }
 }
