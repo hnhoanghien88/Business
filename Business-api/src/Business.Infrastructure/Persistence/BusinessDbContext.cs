@@ -1,4 +1,5 @@
 using Business.Domain.Entities;
+using Business.Domain.Entities.Restaurant;
 using Microsoft.EntityFrameworkCore;
 
 namespace Business.Infrastructure.Persistence;
@@ -7,6 +8,7 @@ public sealed class BusinessDbContext(DbContextOptions<BusinessDbContext> option
     : DbContext(options)
 {
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<RateLimitPolicy> RateLimitPolicies => Set<RateLimitPolicy>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

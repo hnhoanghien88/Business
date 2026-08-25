@@ -1,3 +1,4 @@
+using Business.Application.Abstractions.Persistence.Restaurant;
 using Business.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -17,6 +18,9 @@ public static class DependencyInjection
 
         services.AddDbContext<BusinessDbContext>(options =>
             options.UseMySQL(connectionString));
+        services.AddSingleton(new MySqlConnectionFactory(connectionString));
+        services.AddScoped<IProductRepository, MySqlProductsRepository>();
+        services.AddScoped<IProductReadRepository, DapperProductsReadRepository>();
 
         return services;
     }

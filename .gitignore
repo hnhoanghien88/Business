@@ -11,3 +11,4 @@
 *.suo
 *.log
 **/appsettings.Development.json
+**/logs/

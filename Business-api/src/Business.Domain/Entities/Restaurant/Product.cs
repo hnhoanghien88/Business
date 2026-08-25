@@ -1,4 +1,4 @@
-namespace Business.Domain.Entities;
+namespace Business.Domain.Entities.Restaurant;
 
 public sealed class Product
 {

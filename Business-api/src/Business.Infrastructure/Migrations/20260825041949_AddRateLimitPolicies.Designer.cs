@@ -2,6 +2,7 @@
 using Business.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,14 +10,32 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Business.Infrastructure.Migrations
 {
     [DbContext(typeof(BusinessDbContext))]
-    partial class BusinessDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260825041949_AddRateLimitPolicies")]
+    partial class AddRateLimitPolicies
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
+
+            modelBuilder.Entity("Business.Domain.Entities.Product", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Code");
+
+                    b.ToTable("product", (string)null);
+                });
 
             modelBuilder.Entity("Business.Domain.Entities.RateLimitPolicy", b =>
                 {
@@ -75,22 +94,6 @@ namespace Business.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("rate_limit_policies", (string)null);
-                });
-
-            modelBuilder.Entity("Business.Domain.Entities.Restaurant.Product", b =>
-                {
-                    b.Property<string>("Code")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("varchar(255)");
-
-                    b.HasKey("Code");
-
-                    b.ToTable("restaurant_products", (string)null);
                 });
 #pragma warning restore 612, 618
         }
