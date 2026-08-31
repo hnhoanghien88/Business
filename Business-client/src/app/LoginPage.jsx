@@ -36,7 +36,7 @@ export function LoginPage({ onLoginSuccess }) {
         <Stack className="login-brand" direction="row" spacing={1.25}>
           <Box className="login-logo"><LockRoundedIcon fontSize="small" /></Box>
           <Box>
-            <Typography className="login-brand-name">Business</Typography>
+            <Typography className="login-brand-name">Restaurant</Typography>
             <Typography className="login-brand-caption">MANAGEMENT</Typography>
           </Box>
         </Stack>

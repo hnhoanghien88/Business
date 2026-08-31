@@ -13,7 +13,7 @@ public sealed class UpdateProductValidator : AbstractValidator<UpdateProductComm
     public UpdateProductValidator()
     {
         RuleFor(x => x.Code).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
     }
 }
 
@@ -22,10 +22,10 @@ public sealed class UpdateProductCommandHandler(IProductRepository repository) :
     public async Task<ProductDto> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
         var code = ProductRules.CleanCode(request.Code);
-        var product = await repository.GetByCodeAsync(code, cancellationToken)
-            ?? throw new NotFoundException($"Product '{code}' was not found.");
-        product.Name = ProductRules.Clean(request.Name);
+        var food = await repository.GetByCodeAsync(code, cancellationToken)
+            ?? throw new NotFoundException($"Food '{code}' was not found.");
+        food.Name = ProductRules.Clean(request.Name);
         await repository.SaveAsync(cancellationToken);
-        return ProductRules.ToDto(product);
+        return ProductRules.ToDto(food);
     }
 }

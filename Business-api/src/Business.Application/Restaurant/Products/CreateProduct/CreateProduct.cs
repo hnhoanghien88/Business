@@ -7,14 +7,14 @@ using MediatR;
 
 namespace Business.Application.Restaurant.Products.CreateProduct;
 
-public sealed record CreateProductCommand(string Code, string Name) : IRequest<ProductDto>;
+public sealed record CreateProductCommand(ulong CategoryId, string Code, string Name) : IRequest<ProductDto>;
 
 public sealed class CreateProductValidator : AbstractValidator<CreateProductCommand>
 {
     public CreateProductValidator()
     {
         RuleFor(x => x.Code).NotEmpty().MaximumLength(50);
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
     }
 }
 
@@ -24,9 +24,15 @@ public sealed class CreateProductCommandHandler(IProductRepository repository) :
     {
         var code = ProductRules.CleanCode(request.Code);
         if (await repository.CodeExistsAsync(code, cancellationToken))
-            throw new ConflictException("Product code is already in use.", "code");
-        var product = new Product { Code = code, Name = ProductRules.Clean(request.Name) };
-        await repository.AddAsync(product, cancellationToken);
-        return ProductRules.ToDto(product);
+            throw new ConflictException("Food code is already in use.", "code");
+        var food = new Food
+        {
+            CategoryId = request.CategoryId,
+            Code = code,
+            Name = ProductRules.Clean(request.Name),
+            Category = null!
+        };
+        await repository.AddAsync(food, cancellationToken);
+        return ProductRules.ToDto(food);
     }
 }

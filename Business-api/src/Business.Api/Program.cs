@@ -41,13 +41,13 @@ builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo { Title = "Business API", Version = "v1" });
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "Restaurant API", Version = "v1" });
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT",
-        Description = "Enter the Business access token returned by Identity POST /login."
+        Description = "Enter the Restaurant access token returned by Identity POST /login."
     });
     options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
@@ -86,8 +86,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             {
                 if (context.Principal?.FindFirst("token_type")?.Value != "access")
                     context.Fail("Only access tokens are accepted.");
-                else if (context.Principal.FindFirst("application_code")?.Value != "Business")
-                    context.Fail("The access token is not issued for Business.");
+                else if (context.Principal.FindFirst("application_code")?.Value != jwt.Audience)
+                    context.Fail($"The access token is not issued for application '{jwt.Audience}'.");
                 return Task.CompletedTask;
             }
         };
@@ -98,8 +98,7 @@ var identityAuthorization = builder.Configuration
     .Get<IdentityAuthorizationOptions>()
     ?? throw new InvalidOperationException("Identity authorization configuration is missing.");
 if (!Uri.TryCreate(identityAuthorization.BaseUrl, UriKind.Absolute, out var identityBaseUri)
-    || string.IsNullOrWhiteSpace(identityAuthorization.ApplicationCode)
-    || identityAuthorization.CacheMinutes <= 0)
+    || string.IsNullOrWhiteSpace(identityAuthorization.ApplicationCode))
     throw new InvalidOperationException("Identity authorization configuration is invalid.");
 
 builder.Services.Configure<IdentityAuthorizationOptions>(

@@ -13,6 +13,6 @@ public sealed class GetProductByCodeQueryHandler(IProductReadRepository reposito
     {
         var code = ProductRules.CleanCode(request.Code);
         return await repository.GetByCodeAsync(code, cancellationToken)
-            ?? throw new NotFoundException($"Product '{code}' was not found.");
+            ?? throw new NotFoundException($"Food '{code}' was not found.");
     }
 }

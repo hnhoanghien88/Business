@@ -51,7 +51,7 @@ export function AppShell({ session, path, navigate, onLogout }) {
             <StorefrontOutlinedIcon fontSize="small" />
           </Box>
           <Box>
-            <Typography variant="h6" fontWeight={700}>Business</Typography>
+            <Typography variant="h6" fontWeight={700}>Restaurant</Typography>
             <Typography variant="caption" color="text.secondary">Restaurant</Typography>
           </Box>
         </Stack>

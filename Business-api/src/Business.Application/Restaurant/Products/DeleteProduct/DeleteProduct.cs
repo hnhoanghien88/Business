@@ -11,8 +11,8 @@ public sealed class DeleteProductCommandHandler(IProductRepository repository) :
     public async Task Handle(DeleteProductCommand request, CancellationToken cancellationToken)
     {
         var code = ProductRules.CleanCode(request.Code);
-        var product = await repository.GetByCodeAsync(code, cancellationToken)
-            ?? throw new NotFoundException($"Product '{code}' was not found.");
-        await repository.DeleteAsync(product, cancellationToken);
+        var food = await repository.GetByCodeAsync(code, cancellationToken)
+            ?? throw new NotFoundException($"Food '{code}' was not found.");
+        await repository.DeactivateAsync(food, cancellationToken);
     }
 }

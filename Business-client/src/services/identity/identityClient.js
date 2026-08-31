@@ -1,5 +1,5 @@
 const IDENTITY_BASE_URL = "/identity";
-const APPLICATION_CODE = import.meta.env.VITE_APPLICATION_CODE?.trim() || "Business";
+const APPLICATION_CODE = import.meta.env.VITE_APPLICATION_CODE?.trim() || "restaurant";
 
 let pendingRefresh = null;
 
@@ -14,7 +14,7 @@ export async function login(credentials) {
   if (!response.ok) {
     const problem = await response.json().catch(() => null);
     if (response.status === 401) {
-      throw new Error("Code hoặc mật khẩu không đúng, hoặc bạn chưa có quyền vào Business.");
+      throw new Error("Code hoặc mật khẩu không đúng, hoặc bạn chưa có quyền vào Restaurant.");
     }
     throw new Error(problem?.detail || "Không thể đăng nhập vào Identity.");
   }

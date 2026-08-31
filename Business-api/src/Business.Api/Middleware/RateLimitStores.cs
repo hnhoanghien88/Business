@@ -10,7 +10,7 @@ public sealed class RateLimitingOptions
     public string Store { get; set; } = "InMemory";
     public string FailureMode { get; set; } = "Open";
     public string KeyPrefix { get; set; } = "business:rl";
-    public string ApplicationCode { get; set; } = "Business";
+    public string ApplicationCode { get; set; } = "restaurant";
     public int PolicyCacheSeconds { get; set; } = 30;
     public bool FailOpen => FailureMode.Equals("Open", StringComparison.OrdinalIgnoreCase);
 }

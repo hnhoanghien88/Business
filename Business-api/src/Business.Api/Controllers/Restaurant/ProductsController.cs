@@ -18,7 +18,7 @@ namespace Business.Api.Controllers.Restaurant;
 public sealed class ProductsController(ISender sender) : ControllerBase
 {
     [HttpGet]
-    [Authorize(Policy = ProductPermissions.Read)]
+    [Authorize(Policy = FoodsPermissions.Read)]
     public async Task<ActionResult<ApiResponse<PagedProductsDto>>> GetAll(
         [FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
@@ -28,7 +28,7 @@ public sealed class ProductsController(ISender sender) : ControllerBase
     }
 
     [HttpGet("{code}")]
-    [Authorize(Policy = ProductPermissions.Read)]
+    [Authorize(Policy = FoodsPermissions.Read)]
     public async Task<ActionResult<ApiResponse<ProductDto>>> GetByCode(string code, CancellationToken cancellationToken)
     {
         var product = await sender.Send(new GetProductByCodeQuery(code), cancellationToken);
@@ -36,16 +36,16 @@ public sealed class ProductsController(ISender sender) : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = ProductPermissions.Create)]
+    [Authorize(Policy = FoodsPermissions.Create)]
     public async Task<ActionResult<ApiResponse<ProductDto>>> Create(CreateRequest request, CancellationToken cancellationToken)
     {
-        var product = await sender.Send(new CreateProductCommand(request.Code, request.Name), cancellationToken);
+        var product = await sender.Send(new CreateProductCommand(request.CategoryId, request.Code, request.Name), cancellationToken);
         return CreatedAtAction(nameof(GetByCode), new { code = product.Code },
             new ApiResponse<ProductDto>(true, product, "Product created successfully."));
     }
 
     [HttpPut("{code}")]
-    [Authorize(Policy = ProductPermissions.Update)]
+    [Authorize(Policy = FoodsPermissions.Update)]
     public async Task<ActionResult<ApiResponse<ProductDto>>> Update(string code, UpdateRequest request, CancellationToken cancellationToken)
     {
         var product = await sender.Send(new UpdateProductCommand(code, request.Name), cancellationToken);
@@ -53,13 +53,13 @@ public sealed class ProductsController(ISender sender) : ControllerBase
     }
 
     [HttpDelete("{code}")]
-    [Authorize(Policy = ProductPermissions.Delete)]
+    [Authorize(Policy = FoodsPermissions.Delete)]
     public async Task<ActionResult<ApiResponse<object>>> Delete(string code, CancellationToken cancellationToken)
     {
         await sender.Send(new DeleteProductCommand(code), cancellationToken);
         return Ok(new ApiResponse<object>(true, null, "Product deleted successfully."));
     }
 
-    public sealed record CreateRequest(string Code, string Name);
+    public sealed record CreateRequest(ulong CategoryId, string Code, string Name);
     public sealed record UpdateRequest(string Name);
 }

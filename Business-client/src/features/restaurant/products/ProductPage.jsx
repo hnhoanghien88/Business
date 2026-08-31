@@ -14,9 +14,9 @@ import { DeleteProductDialog } from "./components/DeleteProductDialog.jsx";
 import { ProductFormDialog } from "./components/ProductFormDialog.jsx";
 
 const permissions = {
-  create: "Product.Create",
-  update: "Product.Update",
-  delete: "Product.Delete",
+  create: "Foods.Create",
+  update: "Foods.Update",
+  delete: "Foods.Delete",
 };
 
 export function ProductPage({ grantedPermissions = [] }) {

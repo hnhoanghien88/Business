@@ -13,6 +13,7 @@ Business Platform là dự án full-stack được tổ chức theo module nghi�
 - Performance behavior cảnh báo các MediatR request chạy chậm.
 - Dynamic rate limiting hỗ trợ Fixed Window, Sliding Window, Token Bucket và Concurrency.
 - Rate-limit state có thể lưu trong memory hoặc Redis với Lua script nguyên tử.
+- Backend xác minh JWT và kiểm tra permission động qua Identity cho từng request được bảo vệ.
 - EF Core migrations hỗ trợ chạy kèm embedded SQL để quản lý view và stored procedure.
 - Frontend React được tổ chức theo feature, hiện có trang Restaurant Products và tích hợp Identity client.
 
@@ -27,6 +28,7 @@ ASP.NET Core API
   ├── Structured logging
   ├── Exception / Problem Details
   ├── Dynamic rate limiting
+  ├── JWT authentication + Identity permission authorization
   └── Controllers theo module
         │
         ▼
@@ -73,6 +75,12 @@ MySQL + Redis/InMemory rate-limit store
 - Redis hoặc InMemory cho rate-limit counters/concurrency leases
 - EF Core migrations kết hợp embedded SQL migrations
 - Cấu hình phân tách theo environment
+
+### Quy trình đặc tả
+
+- GitHub Spec Kit 0.16.1 cho Spec-Driven Development.
+- Tích hợp Codex dạng project skills trong `.agents/skills/`.
+- PowerShell automation scripts và templates dùng chung trong `.specify/`.
 
 ## Cấu trúc module Restaurant
 
@@ -161,7 +169,9 @@ CorrelationIdMiddleware
 → StructuredRequestLoggingMiddleware
 → ExceptionMiddleware
 → HTTPS / Routing
+→ Authentication
 → DynamicRateLimitMiddleware
+→ Authorization (permission được xác thực qua Identity)
 → Controller
 → PerformanceBehavior
 → ValidationBehavior
@@ -169,6 +179,29 @@ CorrelationIdMiddleware
 ```
 
 API nhận correlation ID hợp lệ từ header `X-Correlation-ID` hoặc tự sinh mới. ID cuối cùng được trả trong response header, đưa vào Serilog context và đính kèm các Problem Details response.
+
+## Xác thực và phân quyền
+
+Restaurant API xác minh JWT bearer trước khi request vào controller. Token phải:
+
+- Là access token (`token_type=access`).
+- Được phát hành cho Identity Application `Restaurant` (`application_code=restaurant`, audience `restaurant`).
+- Có các claim `sub` và `permissionversion` để thực hiện kiểm tra permission.
+
+Các endpoint Foods dùng permission policy tương ứng cho thao tác đọc, tạo, cập nhật và xóa. Khi policy được đánh giá, Restaurant API chuyển bearer token hiện tại tới endpoint `authorization` của Identity cùng `ApplicationCode=restaurant`. Identity kiểm tra token, phiên bản permission hiện hành và trả về danh sách quyền.
+
+Kết quả authorization **không được cache tại Business**. Vì vậy, sau khi Identity tăng `permissionversion` do thay đổi hoặc thu hồi quyền, token mang phiên bản cũ sẽ bị từ chối ngay ở lần gọi Business tiếp theo. Memory cache trong API chỉ tiếp tục được dùng cho rate-limit policies và không lưu kết quả xác thực quyền.
+
+Cấu hình kết nối Identity:
+
+```json
+{
+  "IdentityAuthorization": {
+    "BaseUrl": "https://localhost:7203/",
+    "ApplicationCode": "restaurant"
+  }
+}
+```
 
 ## Logging và hiệu năng
 
@@ -195,8 +228,8 @@ Cấu hình chính:
     "Enabled": true,
     "Store": "InMemory",
     "FailureMode": "Open",
-    "KeyPrefix": "business:rl",
-    "ApplicationCode": "Business",
+    "KeyPrefix": "restaurant:rl",
+    "ApplicationCode": "restaurant",
     "PolicyCacheSeconds": 30
   }
 }
@@ -249,9 +282,24 @@ npm run dev
 
 Swagger UI được bật trong Development. Health check có tại `GET /health`.
 
+## Spec Kit
+
+Repo đã được khởi tạo Spec Kit cho Codex với PowerShell scripts. Quy trình chuẩn:
+
+```text
+$speckit-constitution
+→ $speckit-specify
+→ $speckit-plan
+→ $speckit-tasks
+→ $speckit-implement
+```
+
+Các skill bổ trợ gồm `$speckit-clarify`, `$speckit-checklist`, `$speckit-analyze`, `$speckit-converge` và `$speckit-taskstoissues`. Constitution của dự án nằm tại `.specify/memory/constitution.md`; các feature spec được tạo theo workflow sẽ nằm trong `specs/`.
+
 ## Phạm vi hiện tại
 
 - CRUD Restaurant Product đã hoàn chỉnh ở backend.
 - Frontend có feature Restaurant Products và Identity session client.
-- Backend chưa tự phát hành hoặc xác minh JWT và chưa áp dụng permission policies lên controller; các authorization constants hiện là nền tảng cho bước tích hợp Identity tiếp theo.
+- Backend xác minh JWT bearer và đã áp dụng permission policies lên các endpoint Restaurant Product.
+- Business không tự phát hành token; việc xác nhận phiên bản và danh sách quyền hiện hành được ủy quyền cho Identity trên mỗi lần kiểm tra policy.
 - Chưa có automated test projects trong solution hiện tại.

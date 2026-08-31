@@ -8,7 +8,7 @@ public sealed class RateLimitPolicyConfiguration : IEntityTypeConfiguration<Rate
 {
     public void Configure(EntityTypeBuilder<RateLimitPolicy> builder)
     {
-        builder.ToTable("rate_limit_policies");
+        builder.ToTable("restaurant_rate_limit_policies");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name).HasMaxLength(100).IsRequired();
         builder.Property(x => x.RoutePattern).HasMaxLength(255).IsRequired();

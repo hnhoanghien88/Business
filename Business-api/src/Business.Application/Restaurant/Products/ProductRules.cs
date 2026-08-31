@@ -7,5 +7,6 @@ internal static class ProductRules
 {
     public static string Clean(string value) => value.Trim();
     public static string CleanCode(string value) => value.Trim().ToUpperInvariant();
-    public static ProductDto ToDto(Product product) => new(product.Code, product.Name);
+    public static ProductDto ToDto(Food food) =>
+        new(food.Id, food.CategoryId, food.Code, food.Name, food.IsActive);
 }

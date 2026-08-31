@@ -12,9 +12,9 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("BusinessDatabase")
+        var connectionString = configuration.GetConnectionString("RestaurantDatabase")
             ?? throw new InvalidOperationException(
-                "Connection string 'BusinessDatabase' was not found.");
+                "Connection string 'RestaurantDatabase' was not found.");
 
         services.AddDbContext<BusinessDbContext>(options =>
             options.UseMySQL(connectionString));
