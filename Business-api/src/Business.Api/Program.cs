@@ -3,6 +3,8 @@ using Business.Api.Authentication;
 using Business.Api.Authorization;
 using Business.Application.Common.Behaviors;
 using Business.Application.Restaurant.Products.CreateProduct;
+using Business.Application.Restaurant.Categories.CreateCategory;
+using Business.Application.Restaurant.Categories.UpdateCategory;
 using Business.Infrastructure;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -115,6 +117,8 @@ builder.Services.AddMediatR(configuration =>
     configuration.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });
 builder.Services.AddTransient<IValidator<CreateProductCommand>, CreateProductValidator>();
+builder.Services.AddTransient<IValidator<CreateCategoryCommand>, CreateCategoryValidator>();
+builder.Services.AddTransient<IValidator<UpdateCategoryCommand>, UpdateCategoryValidator>();
 builder.Services.AddTransient<IValidator<Business.Application.Restaurant.Products.UpdateProduct.UpdateProductCommand>, Business.Application.Restaurant.Products.UpdateProduct.UpdateProductValidator>();
 var rateLimiting = builder.Configuration.GetSection(RateLimitingOptions.SectionName).Get<RateLimitingOptions>() ?? new();
 if (rateLimiting.Store is not ("Redis" or "InMemory")) throw new InvalidOperationException("RateLimiting:Store must be either 'Redis' or 'InMemory'.");

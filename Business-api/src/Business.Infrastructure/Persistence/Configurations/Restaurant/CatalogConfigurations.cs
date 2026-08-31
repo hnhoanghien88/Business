@@ -18,7 +18,8 @@ public sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.Property(category => category.IsActive).HasDefaultValue(true);
         builder.Property(category => category.CreatedDate).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
         builder.Property(category => category.UpdatedDate)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)")
+            .IsConcurrencyToken();
         builder.HasIndex(category => category.Code)
             .IsUnique()
             .HasDatabaseName("uk_categories_code");
@@ -28,7 +29,8 @@ public sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
             {
                 category.ParentId,
                 category.DisplayOrder,
-                category.Name
+                category.Name,
+                category.Code
             })
             .HasDatabaseName("ix_categories_parent_order");
         builder.HasOne(category => category.Parent)

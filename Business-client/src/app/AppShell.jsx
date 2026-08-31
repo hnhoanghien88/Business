@@ -19,8 +19,10 @@ import RestaurantMenuRoundedIcon from "@mui/icons-material/RestaurantMenuRounded
 import { logout } from "../services/identity/identityClient.js";
 import { getSessionUser } from "../shared/auth/sessionUser.js";
 import { ProductPage } from "../features/restaurant/products/ProductPage.jsx";
+import { CategoryPage } from "../features/restaurant/categories/CategoryPage.jsx";
 
 const PRODUCT_PATH = "/product";
+const CATEGORY_PATH = "/restaurant/categories";
 
 export function AppShell({ session, path, navigate, onLogout }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -30,6 +32,7 @@ export function AppShell({ session, path, navigate, onLogout }) {
     name: "Product",
     route: PRODUCT_PATH,
   };
+  const categoryMenu = findMenu(session.authorization?.menus, "categories", CATEGORY_PATH);
 
   const handleLogout = async () => {
     setError("");
@@ -78,23 +81,47 @@ export function AppShell({ session, path, navigate, onLogout }) {
             <ListItemIcon><RestaurantMenuRoundedIcon /></ListItemIcon>
             <ListItemText primary={productMenu.name} />
           </ListItemButton>
+          {categoryMenu && (
+            <ListItemButton
+              selected={path === CATEGORY_PATH}
+              onClick={() => navigate(categoryMenu.route || CATEGORY_PATH)}
+            >
+              <ListItemIcon><RestaurantMenuRoundedIcon /></ListItemIcon>
+              <ListItemText primary={categoryMenu.name || "Nhóm món"} />
+            </ListItemButton>
+          )}
         </List>
       </Paper>
 
       <Box className="business-workspace">
         <Box component="header" className="business-topbar">
-          <Typography className="business-page-title">Product</Typography>
+          <Typography className="business-page-title">
+            {path === CATEGORY_PATH ? "Nhóm món" : "Product"}
+          </Typography>
           <Box className="business-user-avatar" aria-hidden="true">
             {sessionUser.displayName.charAt(0).toUpperCase()}
           </Box>
         </Box>
         <Box component="main" className="business-content">
           {error && <Alert severity="error">{error}</Alert>}
-          <ProductPage grantedPermissions={session.authorization?.permissions} />
+          {path === CATEGORY_PATH ? (
+            <CategoryPage grantedPermissions={session.authorization?.permissions} />
+          ) : (
+            <ProductPage grantedPermissions={session.authorization?.permissions} />
+          )}
         </Box>
       </Box>
     </Box>
   );
+}
+
+function findMenu(menus = [], code, route) {
+  for (const menu of menus) {
+    if (menu.route === route || menu.code?.toLowerCase() === code) return menu;
+    const child = findMenu(menu.children, code, route);
+    if (child) return child;
+  }
+  return null;
 }
 
 function findProductMenu(menus = []) {

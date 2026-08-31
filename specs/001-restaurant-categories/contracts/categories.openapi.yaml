@@ -1,0 +1,206 @@
+openapi: 3.1.0
+info:
+  title: Restaurant Categories API
+  version: 1.0.0
+paths:
+  /api/restaurant/categories:
+    get:
+      summary: List or search category tree nodes
+      security: [{ bearerAuth: [] }]
+      x-permission: Categories.Read
+      parameters:
+        - { name: search, in: query, schema: { type: string, maxLength: 150 } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/CategoryStatusFilter' } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200':
+          description: Paged category nodes with hierarchy context
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CategoryPageResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create a root or child category
+      security: [{ bearerAuth: [] }]
+      x-permission: Categories.Create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCategoryRequest' }
+      responses:
+        '201':
+          description: Created category
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CategoryResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/restaurant/categories/{code}:
+    parameters:
+      - name: code
+        in: path
+        required: true
+        schema: { type: string, maxLength: 50 }
+    get:
+      summary: Get category details and deactivation impact
+      security: [{ bearerAuth: [] }]
+      x-permission: Categories.Read
+      responses:
+        '200':
+          description: Category details
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CategoryResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      summary: Update, move, activate, or deactivate a category
+      security: [{ bearerAuth: [] }]
+      x-permission: Categories.Update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateCategoryRequest' }
+      responses:
+        '200':
+          description: Updated category
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CategoryResponse' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    CategoryStatusFilter:
+      type: string
+      enum: [all, active, inactive, effective-active, effective-inactive]
+      default: all
+    Ancestor:
+      type: object
+      required: [id, code, name]
+      properties:
+        id: { type: integer, format: int64, minimum: 1 }
+        code: { type: string }
+        name: { type: string }
+    Category:
+      type: object
+      required: [id, code, name, displayOrder, isActive, isEffectivelyActive, depth, ancestorPath, hasChildren, descendantCount, directFoodCount, version]
+      properties:
+        id: { type: integer, format: int64, minimum: 1 }
+        parentId: { type: [integer, 'null'], format: int64 }
+        code: { type: string, maxLength: 50 }
+        name: { type: string, maxLength: 150 }
+        description: { type: [string, 'null'], maxLength: 500 }
+        displayOrder: { type: integer, format: int32 }
+        isActive: { type: boolean }
+        isEffectivelyActive: { type: boolean }
+        depth: { type: integer, minimum: 0 }
+        ancestorPath:
+          type: array
+          items: { $ref: '#/components/schemas/Ancestor' }
+        hasChildren: { type: boolean }
+        descendantCount: { type: integer, minimum: 0 }
+        directFoodCount: { type: integer, minimum: 0 }
+        version: { type: string, format: date-time }
+    CreateCategoryRequest:
+      type: object
+      required: [code, name, displayOrder, isActive]
+      properties:
+        parentId: { type: [integer, 'null'], format: int64 }
+        code: { type: string, minLength: 1, maxLength: 50 }
+        name: { type: string, minLength: 1, maxLength: 150 }
+        description: { type: [string, 'null'], maxLength: 500 }
+        displayOrder: { type: integer, format: int32 }
+        isActive: { type: boolean, default: true }
+    UpdateCategoryRequest:
+      type: object
+      required: [name, displayOrder, isActive, version]
+      properties:
+        parentId: { type: [integer, 'null'], format: int64 }
+        name: { type: string, minLength: 1, maxLength: 150 }
+        description: { type: [string, 'null'], maxLength: 500 }
+        displayOrder: { type: integer, format: int32 }
+        isActive: { type: boolean }
+        version: { type: string, format: date-time }
+    CategoryPage:
+      type: object
+      required: [items, totalCount, page, pageSize]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Category' }
+        totalCount: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, minimum: 1, maximum: 100 }
+    ApiResponseBase:
+      type: object
+      required: [success, message]
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+    CategoryPageResponse:
+      allOf:
+        - { $ref: '#/components/schemas/ApiResponseBase' }
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: '#/components/schemas/CategoryPage' }
+    CategoryResponse:
+      allOf:
+        - { $ref: '#/components/schemas/ApiResponseBase' }
+        - type: object
+          required: [data]
+          properties:
+            data: { $ref: '#/components/schemas/Category' }
+    ProblemDetails:
+      type: object
+      properties:
+        type: { type: string, format: uri-reference }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        correlationId: { type: string }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+  responses:
+    ValidationError:
+      description: Input or hierarchy validation failed
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Unauthorized:
+      description: Missing, invalid, or expired access token
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Forbidden:
+      description: Current Identity permissions do not allow the operation
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    NotFound:
+      description: Category was not found
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Conflict:
+      description: Duplicate code, stale version, or hierarchy changed concurrently
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }

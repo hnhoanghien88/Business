@@ -166,6 +166,13 @@ button, input { font: inherit; }
 .product-card .MuiTableCell-head { color: #64748b; font-size: 12px; font-weight: 700; text-transform: uppercase; }
 .product-code { color: #4b5ed3; font-family: ui-monospace, SFMono-Regular, Consolas, monospace !important; font-size: 13px !important; font-weight: 650 !important; }
 .product-empty { height: 160px; color: #8391a2 !important; }
+.category-page { width: 100%; }
+.category-heading { align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.category-heading .MuiButton-root { text-transform: none; }
+.category-card { overflow: hidden; border: 1px solid #e5e7eb; }
+.category-toolbar { align-items: center; gap: 10px; padding: 18px 20px; border-bottom: 1px solid #e5e7eb; }
+.category-toolbar .MuiTextField-root:first-child { width: min(420px, 100%); }
+.category-loading { min-height: 180px; display: grid; place-items: center; color: #8391a2; }
 
 @media (max-width: 600px) {
   .login-page { padding: 24px 14px 68px; }
@@ -187,4 +194,7 @@ button, input { font: inherit; }
   .product-heading { align-items: flex-start; flex-direction: column !important; }
   .product-toolbar { align-items: stretch; flex-wrap: wrap; }
   .product-toolbar .MuiTextField-root { flex: 1 1 100%; }
+  .category-heading { align-items: flex-start; flex-direction: column !important; }
+  .category-toolbar { align-items: stretch; flex-wrap: wrap; }
+  .category-toolbar .MuiTextField-root:first-child { flex: 1 1 100%; }
 }

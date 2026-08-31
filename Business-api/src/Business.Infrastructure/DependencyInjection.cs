@@ -21,6 +21,8 @@ public static class DependencyInjection
         services.AddSingleton(new MySqlConnectionFactory(connectionString));
         services.AddScoped<IProductRepository, MySqlProductsRepository>();
         services.AddScoped<IProductReadRepository, DapperProductsReadRepository>();
+        services.AddScoped<ICategoryRepository, MySqlCategoriesRepository>();
+        services.AddScoped<ICategoryReadRepository, DapperCategoriesReadRepository>();
 
         return services;
     }

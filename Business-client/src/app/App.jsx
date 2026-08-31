@@ -11,6 +11,7 @@ import {
 
 const LOGIN_PATH = "/login";
 const PRODUCT_PATH = "/product";
+const CATEGORY_PATH = "/restaurant/categories";
 
 const theme = createTheme({
   palette: {
@@ -39,7 +40,9 @@ function App() {
       .then((restoredSession) => {
         setSession(restoredSession);
         if (restoredSession && ["/", LOGIN_PATH].includes(window.location.pathname)) {
-          navigate(PRODUCT_PATH, true);
+          navigate(hasCategoryMenu(restoredSession.authorization?.menus)
+            ? CATEGORY_PATH
+            : PRODUCT_PATH, true);
         }
       })
       .catch(() => setSession(null))
@@ -86,3 +89,10 @@ function App() {
 }
 
 export default App;
+
+function hasCategoryMenu(menus = []) {
+  return menus.some((menu) =>
+    menu.route === CATEGORY_PATH
+    || menu.code?.toLowerCase() === "categories"
+    || hasCategoryMenu(menu.children));
+}
