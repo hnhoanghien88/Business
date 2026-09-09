@@ -23,6 +23,14 @@ public static class DependencyInjection
         services.AddScoped<IFoodReadRepository, DapperFoodsReadRepository>();
         services.AddScoped<ICategoryRepository, MySqlCategoriesRepository>();
         services.AddScoped<ICategoryReadRepository, DapperCategoriesReadRepository>();
+        services.AddScoped<ILayoutRepository, MySqlLayoutsRepository>();
+        services.AddScoped<ILayoutReadRepository, DapperLayoutsReadRepository>();
+        services.AddScoped<ITableOperationsRepository, MySqlTableOperationsRepository>();
+        services.AddScoped<ITableOperationsReadRepository, DapperTableOperationsReadRepository>();
+        services.AddScoped<IOrderingRepository, MySqlOrderingRepository>();
+        services.AddScoped<IOrderingReadRepository, DapperOrderingReadRepository>();
+        services.AddScoped<IOrderingRepository, MySqlOrderingRepository>();
+        services.AddScoped<IOrderingReadRepository, DapperOrderingReadRepository>();
 
         return services;
     }

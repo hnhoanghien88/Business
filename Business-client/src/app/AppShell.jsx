@@ -20,9 +20,15 @@ import { logout } from "../services/identity/identityClient.js";
 import { getSessionUser } from "../shared/auth/sessionUser.js";
 import { FoodsPage } from "../features/restaurant/foods/FoodsPage.jsx";
 import { CategoryPage } from "../features/restaurant/categories/CategoryPage.jsx";
+import { LayoutsPage } from "../features/restaurant/layouts/LayoutsPage.jsx";
+import { TableOperationsPage } from "../features/restaurant/tableOperations/TableOperationsPage.jsx";
+import { OrderingPage } from "../features/restaurant/ordering/OrderingPage.jsx";
 
 const FOOD_PATH = "/restaurant/foods";
 const CATEGORY_PATH = "/restaurant/categories";
+const LAYOUT_PATH = "/restaurant/layouts";
+const TABLE_OPERATIONS_PATH = "/restaurant/table-operations";
+const ORDERING_PATH = "/restaurant/ordering";
 
 export function AppShell({ session, path, navigate, onLogout }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -33,6 +39,12 @@ export function AppShell({ session, path, navigate, onLogout }) {
     route: FOOD_PATH,
   };
   const categoryMenu = findMenu(session.authorization?.menus, "categories", CATEGORY_PATH);
+  const layoutMenu = findMenu(session.authorization?.menus, "layouts", LAYOUT_PATH);
+  const tableOperationsMenu = findMenu(
+    session.authorization?.menus,
+    "table-operations",
+    TABLE_OPERATIONS_PATH);
+  const orderingMenu = findMenu(session.authorization?.menus, "ordering", ORDERING_PATH);
 
   const handleLogout = async () => {
     setError("");
@@ -90,13 +102,45 @@ export function AppShell({ session, path, navigate, onLogout }) {
               <ListItemText primary={categoryMenu.name || "Nhóm món"} />
             </ListItemButton>
           )}
+          {layoutMenu && (
+            <ListItemButton
+              selected={path === LAYOUT_PATH}
+              onClick={() => navigate(layoutMenu.route || LAYOUT_PATH)}
+            >
+              <ListItemIcon><StorefrontOutlinedIcon /></ListItemIcon>
+              <ListItemText primary={layoutMenu.name || "Thiết lập khu vực & bàn"} />
+            </ListItemButton>
+          )}
+          {tableOperationsMenu && (
+            <ListItemButton
+              selected={path === TABLE_OPERATIONS_PATH}
+              onClick={() => navigate(
+                tableOperationsMenu.route || TABLE_OPERATIONS_PATH)}
+            >
+              <ListItemIcon><StorefrontOutlinedIcon /></ListItemIcon>
+              <ListItemText primary={tableOperationsMenu.name || "Sơ đồ bàn"} />
+            </ListItemButton>
+          )}
+          {orderingMenu && (
+            <ListItemButton selected={path === ORDERING_PATH}
+              onClick={() => navigate(orderingMenu.route || ORDERING_PATH)}>
+              <ListItemIcon><RestaurantMenuRoundedIcon /></ListItemIcon>
+              <ListItemText primary={orderingMenu.name || "Gọi món"} />
+            </ListItemButton>
+          )}
         </List>
       </Paper>
 
       <Box className="business-workspace">
         <Box component="header" className="business-topbar">
           <Typography className="business-page-title">
-            {path === CATEGORY_PATH ? "Nhóm món" : "Foods"}
+            {path === CATEGORY_PATH
+              ? "Nhóm món"
+              : path === LAYOUT_PATH
+                ? "Thiết lập khu vực & bàn"
+                : path === TABLE_OPERATIONS_PATH
+                  ? "Sơ đồ bàn"
+                  : "Foods"}
           </Typography>
           <Box className="business-user-avatar" aria-hidden="true">
             {sessionUser.displayName.charAt(0).toUpperCase()}
@@ -104,8 +148,17 @@ export function AppShell({ session, path, navigate, onLogout }) {
         </Box>
         <Box component="main" className="business-content">
           {error && <Alert severity="error">{error}</Alert>}
-          {path === CATEGORY_PATH ? (
+          {path === ORDERING_PATH ? (
+            <OrderingPage />
+          ) : path === CATEGORY_PATH ? (
             <CategoryPage grantedPermissions={session.authorization?.permissions} />
+          ) : path === LAYOUT_PATH ? (
+            <LayoutsPage grantedPermissions={session.authorization?.permissions} />
+          ) : path === TABLE_OPERATIONS_PATH ? (
+            <TableOperationsPage
+              grantedPermissions={session.authorization?.permissions}
+              navigate={navigate}
+            />
           ) : (
             <FoodsPage grantedPermissions={session.authorization?.permissions} />
           )}

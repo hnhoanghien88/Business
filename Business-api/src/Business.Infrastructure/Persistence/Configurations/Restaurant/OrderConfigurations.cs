@@ -25,6 +25,7 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasKey(order => order.Id);
         builder.Property(order => order.Id).ValueGeneratedOnAdd();
         builder.Property(order => order.OrderNo).HasMaxLength(50).IsRequired();
+        builder.Property(order => order.ClientRequestId).IsRequired();
         builder.Property(order => order.OrderType).HasMaxLength(30).HasDefaultValue("DineIn");
         builder.Property(order => order.Status).HasMaxLength(30).HasDefaultValue("Pending");
         builder.Property(order => order.SubtotalAmount).HasPrecision(18, 2).HasDefaultValue(0m);
@@ -39,6 +40,9 @@ public sealed class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.HasIndex(order => order.OrderNo)
             .IsUnique()
             .HasDatabaseName("uk_orders_order_no");
+        builder.HasIndex(order => order.ClientRequestId)
+            .IsUnique()
+            .HasDatabaseName("uk_orders_client_request_id");
         builder.HasIndex(order => new { order.OrderedDate, order.Status })
             .HasDatabaseName("ix_orders_ordered_date_status");
         builder.HasIndex(order => order.TableSessionId)

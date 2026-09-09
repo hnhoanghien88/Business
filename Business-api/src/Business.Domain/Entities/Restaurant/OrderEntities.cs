@@ -4,6 +4,7 @@ public sealed class Order
 {
     public ulong Id { get; set; }
     public required string OrderNo { get; set; }
+    public Guid ClientRequestId { get; set; }
     public ulong? TableSessionId { get; set; }
     public ulong? CustomerId { get; set; }
     public string OrderType { get; set; } = "DineIn";

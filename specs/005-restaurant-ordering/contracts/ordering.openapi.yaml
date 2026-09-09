@@ -1,0 +1,42 @@
+openapi: 3.0.3
+info: { title: Restaurant Ordering API, version: 1.0.0 }
+paths:
+  /api/restaurant/ordering/sessions/{sessionId}/menu:
+    get:
+      summary: Read current sellable menu
+      responses: { '200': { description: Current menu } }
+  /api/restaurant/ordering/sessions/{sessionId}/orders:
+    get:
+      summary: Read session order history and totals
+      responses: { '200': { description: Session summary } }
+  /api/restaurant/ordering/sessions/{sessionId}/promotion-preview:
+    post:
+      summary: Validate one promotion against current cart
+      responses: { '200': { description: Current preview }, '409': { description: Invalid cart or promotion } }
+  /api/restaurant/ordering/sessions/{sessionId}/confirm:
+    post:
+      summary: Atomically create and send an order to kitchen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [requestId, observedTotal, items]
+              properties:
+                requestId: { type: string, format: uuid }
+                observedTotal: { type: number }
+                promotionCode: { type: string, nullable: true }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    required: [foodVariantId, quantity]
+                    properties:
+                      foodVariantId: { type: integer, format: int64 }
+                      quantity: { type: integer, minimum: 1 }
+                      note: { type: string, maxLength: 500 }
+      responses:
+        '200': { description: Existing idempotent result }
+        '201': { description: Order and ticket created }
+        '409': { description: Current-state conflict; nothing committed }

@@ -29,6 +29,10 @@ Nhân viên phục vụ xem bàn theo khu vực và nhận biết tức thời b
 1. **Given** người dùng có quyền xem, **When** mở sơ đồ, **Then** bàn được nhóm theo khu vực với tên, sức chứa, trạng thái và thông tin session hiện hành.
 2. **Given** trạng thái bàn thay đổi từ nơi khác, **When** màn hình nhận đồng bộ hoặc kết nối lại, **Then** card phản ánh trạng thái mới mà không nhân đôi session.
 3. **Given** tải lỗi, **When** mở màn hình, **Then** người dùng thấy trạng thái lỗi/thử lại và trạng thái kết nối rõ ràng.
+4. **Given** các lượt tải snapshot đồng thời có cùng search, area, status và paging đã chuẩn hóa,
+   **When** request trước chưa hoàn tất, **Then** chỉ một network request được gửi và mọi caller nhận
+   cùng kết quả; điều kiện khác tạo request riêng, còn request lỗi được loại khỏi danh sách đang xử
+   lý để lần tải lại có thể thử mới.
 
 ---
 
@@ -110,6 +114,9 @@ Nhân viên đóng session khi tất cả nghĩa vụ xử lý/thanh toán hoàn
 - **FR-015**: Các command MUST chống xử lý trùng khi retry và phát hiện trạng thái lỗi thời.
 - **FR-016**: Menu/route/action MUST lấy từ authorization của Identity Application code `restaurant`.
 - **FR-017**: Layout MUST dùng toàn chiều rộng workspace, thích ứng sidebar/drawer và thao tác được bằng bàn phím.
+- **FR-018**: Các lượt tải snapshot đồng thời có cùng điều kiện chuẩn hóa MUST dùng chung một
+  request đang xử lý; điều kiện khác MUST độc lập và lỗi MUST có thể retry mà không dùng cache kết
+  quả cũ thay cho coalescing.
 
 ### Key Entities
 

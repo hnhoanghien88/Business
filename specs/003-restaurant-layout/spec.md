@@ -70,6 +70,14 @@ Người quản lý tạm ngừng sử dụng bàn hỏng/bảo trì và kích h
 - Khu vực ngừng hoạt động nhưng còn bàn Occupied.
 - Bàn có trạng thái vận hành thay đổi trong lúc form cấu hình đang mở.
 
+### Cross-cutting Acceptance Scenario - Concurrent list loads
+
+1. **Given** either tab issues concurrent list loads with identical normalized search, filters,
+   sort, page, and page size, **When** the requests overlap, **Then** exactly one network request is
+   sent and every caller receives the same result; changing any normalized condition sends a
+   separate request, and a failed request is removed from the in-flight registry so it can be
+   retried.
+
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
@@ -91,6 +99,9 @@ Người quản lý tạm ngừng sử dụng bàn hỏng/bảo trì và kích h
 - **FR-015**: Thay đổi cấu hình hợp lệ MUST phản ánh trên sơ đồ bàn chậm nhất ở lần tải/đồng bộ kế tiếp.
 - **FR-016**: Hard delete khu vực/bàn đã có tham chiếu lịch sử MUST nằm ngoài phạm vi.
 - **FR-017**: Màn hình MUST dùng được với sidebar mở/thu gọn, trên mobile và bằng bàn phím.
+- **FR-018**: Concurrent area or table list loads with identical normalized query conditions MUST
+  share one in-flight network request; different conditions MUST remain independent and failures
+  MUST be retryable without stale result caching.
 
 ### Key Entities
 

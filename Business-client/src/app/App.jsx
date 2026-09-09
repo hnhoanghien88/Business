@@ -13,6 +13,9 @@ const LOGIN_PATH = "/login";
 const FOOD_PATH = "/restaurant/foods";
 const LEGACY_FOOD_PATHS = ["/product", "/restaurant/products"];
 const CATEGORY_PATH = "/restaurant/categories";
+const LAYOUT_PATH = "/restaurant/layouts";
+const TABLE_OPERATIONS_PATH = "/restaurant/table-operations";
+const ORDERING_PATH = "/restaurant/ordering";
 
 const theme = createTheme({
   palette: {
@@ -45,6 +48,18 @@ function App() {
             ? CATEGORY_PATH
             : FOOD_PATH, true);
         } else if (restoredSession && LEGACY_FOOD_PATHS.includes(window.location.pathname)) {
+          navigate(FOOD_PATH, true);
+        } else if (restoredSession && window.location.pathname === LAYOUT_PATH
+          && !hasMenu(restoredSession.authorization?.menus, "layouts", LAYOUT_PATH)) {
+          navigate(FOOD_PATH, true);
+        } else if (restoredSession && window.location.pathname === TABLE_OPERATIONS_PATH
+          && !hasMenu(
+            restoredSession.authorization?.menus,
+            "table-operations",
+            TABLE_OPERATIONS_PATH)) {
+          navigate(FOOD_PATH, true);
+        } else if (restoredSession && window.location.pathname === ORDERING_PATH
+          && !hasMenu(restoredSession.authorization?.menus, "ordering", ORDERING_PATH)) {
           navigate(FOOD_PATH, true);
         }
       })
@@ -98,4 +113,10 @@ function hasCategoryMenu(menus = []) {
     menu.route === CATEGORY_PATH
     || menu.code?.toLowerCase() === "categories"
     || hasCategoryMenu(menu.children));
+}
+
+function hasMenu(menus = [], code, route) {
+  return menus.some((menu) => menu.route === route
+    || menu.code?.toLowerCase() === code
+    || hasMenu(menu.children, code, route));
 }

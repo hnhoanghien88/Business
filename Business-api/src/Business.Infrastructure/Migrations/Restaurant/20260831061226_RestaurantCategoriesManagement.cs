@@ -10,14 +10,19 @@ namespace Business.Infrastructure.Migrations.Restaurant
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateIndex(
+                name: "ix_categories_parent_order_v2",
+                table: "restaurant_categories",
+                columns: new[] { "ParentId", "DisplayOrder", "Name", "Code" });
+
             migrationBuilder.DropIndex(
                 name: "ix_categories_parent_order",
                 table: "restaurant_categories");
 
-            migrationBuilder.CreateIndex(
-                name: "ix_categories_parent_order",
+            migrationBuilder.RenameIndex(
+                name: "ix_categories_parent_order_v2",
                 table: "restaurant_categories",
-                columns: new[] { "ParentId", "DisplayOrder", "Name", "Code" });
+                newName: "ix_categories_parent_order");
             global::Business.Infrastructure.Persistence.Migrations.EmbeddedSql.ExecuteFolder(
                 migrationBuilder,
                 "Persistence/Sql/Migrations/RestaurantCategoriesManagement/Up");
@@ -29,14 +34,19 @@ namespace Business.Infrastructure.Migrations.Restaurant
             global::Business.Infrastructure.Persistence.Migrations.EmbeddedSql.ExecuteFolder(
                 migrationBuilder,
                 "Persistence/Sql/Migrations/RestaurantCategoriesManagement/Down");
+            migrationBuilder.CreateIndex(
+                name: "ix_categories_parent_order_v1",
+                table: "restaurant_categories",
+                columns: new[] { "ParentId", "DisplayOrder", "Name" });
+
             migrationBuilder.DropIndex(
                 name: "ix_categories_parent_order",
                 table: "restaurant_categories");
 
-            migrationBuilder.CreateIndex(
-                name: "ix_categories_parent_order",
+            migrationBuilder.RenameIndex(
+                name: "ix_categories_parent_order_v1",
                 table: "restaurant_categories",
-                columns: new[] { "ParentId", "DisplayOrder", "Name" });
+                newName: "ix_categories_parent_order");
         }
     }
 }

@@ -173,6 +173,27 @@ button, input { font: inherit; }
 .category-toolbar { align-items: center; gap: 10px; padding: 18px 20px; border-bottom: 1px solid #e5e7eb; }
 .category-toolbar .MuiTextField-root:first-child { width: min(420px, 100%); }
 .category-loading { min-height: 180px; display: grid; place-items: center; color: #8391a2; }
+.layout-page { width: 100%; }
+.layout-heading { align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.layout-heading .MuiButton-root { text-transform: none; }
+.layout-card { overflow: hidden; border: 1px solid #e5e7eb; }
+.layout-toolbar { align-items: center; gap: 10px; padding: 18px 20px; border-block: 1px solid #e5e7eb; }
+.layout-toolbar .MuiTextField-root:first-child { width: min(420px, 100%); }
+.layout-loading { min-height: 180px; display: grid; place-items: center; color: #8391a2; }
+.table-operations-page { width: 100%; }
+.table-operations-heading { align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.table-operations-toolbar { display: flex; align-items: center; gap: 10px; padding: 18px 20px; margin-bottom: 20px; border: 1px solid #e5e7eb; }
+.table-operations-toolbar .MuiTextField-root:first-child { width: min(420px, 100%); }
+.table-operations-loading { min-height: 220px; display: grid; place-items: center; color: #8391a2; }
+.table-area-group { margin-bottom: 28px; }
+.table-area-group > h2 { margin-bottom: 12px; }
+.table-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+.operation-table-card { min-height: 150px; padding: 16px; border-left-width: 5px !important; }
+.operation-table-card.status-available { border-left-color: #22a06b; }
+.operation-table-card.status-occupied { border-left-color: #ef4444; }
+.operation-table-card.status-cleaning { border-left-color: #f59e0b; }
+.operation-table-card.status-disabled { border-left-color: #64748b; }
+.operation-card-actions { margin-top: 18px; }
 
 @media (max-width: 600px) {
   .login-page { padding: 24px 14px 68px; }
@@ -197,4 +218,15 @@ button, input { font: inherit; }
   .category-heading { align-items: flex-start; flex-direction: column !important; }
   .category-toolbar { align-items: stretch; flex-wrap: wrap; }
   .category-toolbar .MuiTextField-root:first-child { flex: 1 1 100%; }
+  .layout-heading { align-items: flex-start; flex-direction: column !important; }
+  .layout-toolbar { align-items: stretch; flex-wrap: wrap; }
+  .layout-toolbar .MuiTextField-root:first-child { flex: 1 1 100%; }
+  .table-operations-heading { align-items: flex-start; flex-direction: column !important; }
+  .table-operations-toolbar { align-items: stretch; flex-wrap: wrap; }
+  .table-operations-toolbar .MuiTextField-root:first-child { flex: 1 1 100%; }
+}
+.ordering-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
 }

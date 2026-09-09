@@ -18,6 +18,7 @@ public sealed class RestaurantAreaConfiguration : IEntityTypeConfiguration<Resta
         builder.Property(area => area.IsActive).HasDefaultValue(true);
         builder.Property(area => area.CreatedDate).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
         builder.Property(area => area.UpdatedDate)
+            .IsConcurrencyToken()
             .HasDefaultValueSql("CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)");
         builder.HasIndex(area => area.Code)
             .IsUnique()
@@ -48,6 +49,7 @@ public sealed class RestaurantTableConfiguration : IEntityTypeConfiguration<Rest
         builder.Property(table => table.IsActive).HasDefaultValue(true);
         builder.Property(table => table.CreatedDate).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
         builder.Property(table => table.UpdatedDate)
+            .IsConcurrencyToken()
             .HasDefaultValueSql("CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)");
         builder.HasIndex(table => table.Code)
             .IsUnique()

@@ -1,0 +1,49 @@
+openapi: 3.1.0
+info: { title: Restaurant Table Operations API, version: 1.0.0 }
+paths:
+  /api/restaurant/table-operations/tables:
+    get:
+      summary: Get authoritative table snapshot
+      security: [{ bearerAuth: [] }]
+      x-permission: TableOperations.Read
+      parameters:
+        - { name: search, in: query, schema: { type: string } }
+        - { name: areaId, in: query, schema: { type: integer, format: int64 } }
+        - { name: status, in: query, schema: { type: string } }
+      responses: { '200': { description: Table snapshot }, '401': { description: Unauthorized }, '403': { description: Forbidden } }
+  /api/restaurant/table-operations/tables/{code}/open:
+    post:
+      summary: Open session atomically
+      security: [{ bearerAuth: [] }]
+      x-permission: TableOperations.Open
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OpenSession' } } } }
+      responses: { '200': { description: Opened }, '400': { description: Invalid }, '409': { description: State conflict } }
+  /api/restaurant/table-operations/sessions/{id}:
+    get:
+      summary: Get session detail and balances
+      security: [{ bearerAuth: [] }]
+      x-permission: TableOperations.Read
+      responses: { '200': { description: Session detail }, '404': { description: Not found } }
+  /api/restaurant/table-operations/sessions/{id}/close:
+    post:
+      summary: Close session and move table to Cleaning
+      security: [{ bearerAuth: [] }]
+      x-permission: TableOperations.Close
+      requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/CloseSession' } } } }
+      responses: { '200': { description: Closed }, '409': { description: Obligations or state conflict } }
+  /api/restaurant/table-operations/tables/{code}/mark-clean:
+    post:
+      summary: Move Cleaning table to Available
+      security: [{ bearerAuth: [] }]
+      x-permission: TableOperations.Clean
+      responses: { '200': { description: Available }, '409': { description: State conflict } }
+components:
+  securitySchemes: { bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT } }
+  schemas:
+    OpenSession:
+      type: object
+      required: [guestCount]
+      properties: { guestCount: { type: integer, minimum: 1 }, note: { type: [string, 'null'] }, overrideCapacity: { type: boolean }, overrideReason: { type: [string, 'null'] } }
+    CloseSession:
+      type: object
+      properties: { overrideObligations: { type: boolean }, overrideReason: { type: [string, 'null'] } }
