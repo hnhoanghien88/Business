@@ -1,12 +1,12 @@
 # Business Platform
 
-Business Platform là dự án full-stack được tổ chức theo module nghiệp vụ để có thể nhân bản nhanh cho nhiều lĩnh vực như `Restaurant`, `Fashion` hoặc `Retail`. Phiên bản hiện tại triển khai module Restaurant với CRUD Product theo CQRS, một `BusinessDbContext`, MySQL cho dữ liệu bền vững và Redis hoặc bộ nhớ tiến trình cho distributed rate limiting.
+Business Platform là dự án full-stack được tổ chức theo module nghiệp vụ để có thể nhân bản nhanh cho nhiều lĩnh vực như `Restaurant`, `Fashion` hoặc `Retail`. Phiên bản hiện tại triển khai module Restaurant với catalog Foods theo CQRS, một `BusinessDbContext`, MySQL cho dữ liệu bền vững và Redis hoặc bộ nhớ tiến trình cho distributed rate limiting.
 
 ## Điểm nổi bật
 
 - Backend phân lớp theo hướng `Domain ← Application ← Infrastructure/API`.
 - Feature được nhóm theo module nghiệp vụ thay vì đặt chung ở root.
-- CRUD Product dùng MediatR CQRS và FluentValidation pipeline.
+- Quản lý Foods dùng MediatR CQRS và FluentValidation pipeline.
 - Command side dùng Entity Framework Core; query side dùng Dapper.
 - Một `BusinessDbContext` quản lý toàn bộ module, trong khi entity và bảng có namespace/prefix riêng.
 - Correlation ID, structured request logging và Problem Details được áp dụng thống nhất.
@@ -15,7 +15,7 @@ Business Platform là dự án full-stack được tổ chức theo module nghi�
 - Rate-limit state có thể lưu trong memory hoặc Redis với Lua script nguyên tử.
 - Backend xác minh JWT và kiểm tra permission động qua Identity cho từng request được bảo vệ.
 - EF Core migrations hỗ trợ chạy kèm embedded SQL để quản lý view và stored procedure.
-- Frontend React được tổ chức theo feature, hiện có trang Restaurant Products và tích hợp Identity client.
+- Frontend React được tổ chức theo feature, hiện có trang Restaurant Foods và tích hợp Identity client.
 
 ## Kiến trúc
 
@@ -88,68 +88,68 @@ MySQL + Redis/InMemory rate-limit store
 Business.Api
 └── Controllers
     └── Restaurant
-        └── ProductsController.cs
+        └── FoodsController.cs
 
 Business.Application
 ├── Abstractions
 │   └── Persistence
 │       └── Restaurant
-│           ├── IProductRepository.cs
-│           └── IProductReadRepository.cs
+│           ├── IFoodRepository.cs
+│           └── IFoodReadRepository.cs
 └── Restaurant
-    └── Products
-        ├── CreateProduct
-        ├── UpdateProduct
-        ├── DeleteProduct
-        ├── GetProductByCode
-        ├── GetProducts
+    └── Foods
+        ├── CreateFood
+        ├── UpdateFood
+        ├── DeactivateFood
+        ├── GetFoodByCode
+        ├── GetFoods
         ├── Dtos
-        └── ProductRules.cs
+        └── FoodRules.cs
 
 Business.Domain
 └── Entities
     └── Restaurant
-        └── Product.cs
+        └── Food.cs
 
 Business.Infrastructure
 ├── Persistence
 │   ├── Configurations
 │   │   └── Restaurant
-│   │       └── ProductConfiguration.cs
-│   ├── MySqlProductsRepository.cs
-│   └── DapperProductsReadRepository.cs
+│   │       └── FoodConfiguration.cs
+│   ├── MySqlFoodsRepository.cs
+│   └── DapperFoodsReadRepository.cs
 └── Migrations
     └── Restaurant
         └── *_RestaurantInitial.cs
 ```
 
-Khi thêm module mới, có thể giữ cùng tên entity như `Product` nhờ namespace riêng, ví dụ `Business.Domain.Entities.Fashion.Product`. Mỗi entity phải được ánh xạ sang bảng có prefix riêng như `restaurant_products` và `fashion_products`.
+Khi thêm module mới, có thể giữ cùng tên entity như `Food` nhờ namespace riêng. Mỗi entity phải được ánh xạ sang bảng có prefix module; catalog Restaurant dùng `restaurant_foods`.
 
-## CQRS Product
+## CQRS Foods
 
 | Thao tác | HTTP endpoint | MediatR request | Persistence |
 |---|---|---|---|
-| Danh sách/tìm kiếm | `GET /api/restaurant/products` | `GetProductsQuery` | Dapper |
-| Chi tiết | `GET /api/restaurant/products/{code}` | `GetProductByCodeQuery` | Dapper |
-| Tạo | `POST /api/restaurant/products` | `CreateProductCommand` | EF Core |
-| Cập nhật | `PUT /api/restaurant/products/{code}` | `UpdateProductCommand` | EF Core |
-| Xóa | `DELETE /api/restaurant/products/{code}` | `DeleteProductCommand` | EF Core |
+| Danh sách/tìm kiếm | `GET /api/restaurant/foods` | `GetFoodsQuery` | Dapper |
+| Chi tiết | `GET /api/restaurant/foods/{code}` | `GetFoodByCodeQuery` | Dapper |
+| Tạo | `POST /api/restaurant/foods` | `CreateFoodCommand` | EF Core |
+| Cập nhật | `PUT /api/restaurant/foods/{code}` | `UpdateFoodCommand` | EF Core |
+| Ngừng sử dụng | `DELETE /api/restaurant/foods/{code}` | `DeactivateFoodCommand` | EF Core |
 
-Product code được trim và chuẩn hóa thành chữ hoa. Create/Update được kiểm tra bằng FluentValidation; lỗi not found, validation và conflict được trả về theo Problem Details, kèm `correlationId`.
+Food code được trim và chuẩn hóa thành chữ hoa. Create/Update được kiểm tra bằng FluentValidation; lỗi not found, validation và conflict được trả về theo Problem Details, kèm `correlationId`.
 
 ## BusinessDbContext và quy ước database
 
 Dự án dùng một `BusinessDbContext` cho các module. Việc tách module được thực hiện ở namespace, folder, EF configuration và tên bảng:
 
 ```text
-Module Restaurant → restaurant_products
+Module Restaurant → restaurant_foods
 Module Fashion    → fashion_products
 Module Retail     → retail_products
 ```
 
 Không sao chép hoặc chỉnh migration cũ khi thêm module. Sau khi thêm entity, configuration và DbSet, tạo migration mới để EF so sánh model hiện tại với `BusinessDbContextModelSnapshot`.
 
-Migration `RestaurantInitial` nâng cấp bảng `product` cũ bằng `ALTER TABLE ... RENAME` thành `restaurant_products`, vì vậy không xóa dữ liệu. Migration cũng thay:
+Các migration lịch sử đưa dữ liệu Product cũ qua bảng trung gian `restaurant_products`, sau đó hợp nhất vào `restaurant_foods` mà không tạo catalog song song.
 
 ```text
 product_view     → restaurant_products_view
@@ -298,8 +298,8 @@ Các skill bổ trợ gồm `$speckit-clarify`, `$speckit-checklist`, `$speckit-
 
 ## Phạm vi hiện tại
 
-- CRUD Restaurant Product đã hoàn chỉnh ở backend.
-- Frontend có feature Restaurant Products và Identity session client.
-- Backend xác minh JWT bearer và đã áp dụng permission policies lên các endpoint Restaurant Product.
+- Quản lý Restaurant Foods, variants, price và availability có vertical slice ở backend.
+- Frontend có feature Restaurant Foods và Identity session client.
+- Backend xác minh JWT bearer và áp dụng permission `Foods.*` lên các endpoint Restaurant Foods.
 - Business không tự phát hành token; việc xác nhận phiên bản và danh sách quyền hiện hành được ủy quyền cho Identity trên mỗi lần kiểm tra policy.
 - Chưa có automated test projects trong solution hiện tại.

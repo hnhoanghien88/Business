@@ -60,7 +60,7 @@ triggers hide business behavior outside the application pattern.
 ## Authorization and UI integration
 
 **Decision**: Use `Categories.ViewMenu`, `Categories.Read`, `Categories.Create`, and
-`Categories.Update` under application `restaurant`. Discover the menu by code `categories` or route
+`Categories.Update` under application `Restaurant`. Discover the menu by code `categories` or route
 `/restaurant/categories`; hide unauthorized UI actions and enforce every policy again in the API.
 
 **Rationale**: These strings match the specification and dynamic Identity provider. Revocation takes

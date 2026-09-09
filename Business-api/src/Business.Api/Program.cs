@@ -2,7 +2,10 @@ using Business.Api.Middleware;
 using Business.Api.Authentication;
 using Business.Api.Authorization;
 using Business.Application.Common.Behaviors;
-using Business.Application.Restaurant.Products.CreateProduct;
+using Business.Application.Restaurant.Foods.CreateFood;
+using Business.Application.Restaurant.Foods.Availability;
+using Business.Application.Restaurant.Foods.Prices;
+using Business.Application.Restaurant.Foods.Variants;
 using Business.Application.Restaurant.Categories.CreateCategory;
 using Business.Application.Restaurant.Categories.UpdateCategory;
 using Business.Infrastructure;
@@ -112,14 +115,18 @@ builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler
 builder.Services.AddAuthorization();
 builder.Services.AddMediatR(configuration =>
 {
-    configuration.RegisterServicesFromAssembly(typeof(CreateProductCommand).Assembly);
+    configuration.RegisterServicesFromAssembly(typeof(CreateFoodCommand).Assembly);
     configuration.AddOpenBehavior(typeof(PerformanceBehavior<,>));
     configuration.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });
-builder.Services.AddTransient<IValidator<CreateProductCommand>, CreateProductValidator>();
+builder.Services.AddTransient<IValidator<CreateFoodCommand>, CreateFoodValidator>();
+builder.Services.AddTransient<IValidator<CreateFoodVariantCommand>, CreateFoodVariantValidator>();
+builder.Services.AddTransient<IValidator<UpdateFoodVariantCommand>, UpdateFoodVariantValidator>();
+builder.Services.AddTransient<IValidator<ChangeFoodPriceCommand>, ChangeFoodPriceValidator>();
+builder.Services.AddTransient<IValidator<ChangeFoodAvailabilityCommand>, ChangeFoodAvailabilityValidator>();
 builder.Services.AddTransient<IValidator<CreateCategoryCommand>, CreateCategoryValidator>();
 builder.Services.AddTransient<IValidator<UpdateCategoryCommand>, UpdateCategoryValidator>();
-builder.Services.AddTransient<IValidator<Business.Application.Restaurant.Products.UpdateProduct.UpdateProductCommand>, Business.Application.Restaurant.Products.UpdateProduct.UpdateProductValidator>();
+builder.Services.AddTransient<IValidator<Business.Application.Restaurant.Foods.UpdateFood.UpdateFoodCommand>, Business.Application.Restaurant.Foods.UpdateFood.UpdateFoodValidator>();
 var rateLimiting = builder.Configuration.GetSection(RateLimitingOptions.SectionName).Get<RateLimitingOptions>() ?? new();
 if (rateLimiting.Store is not ("Redis" or "InMemory")) throw new InvalidOperationException("RateLimiting:Store must be either 'Redis' or 'InMemory'.");
 if (rateLimiting.PolicyCacheSeconds <= 0) throw new InvalidOperationException("RateLimiting:PolicyCacheSeconds must be greater than zero.");

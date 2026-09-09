@@ -12,7 +12,7 @@ Tập spec này phân rã hệ thống nhà hàng thành 10 feature độc lập
 | # | Feature | Spec | Phụ thuộc chính | Review trọng tâm |
 |---:|---|---|---|---|
 | 001 | Nhóm món | [spec](001-restaurant-categories/spec.md) | Identity | Mã bất biến, deactivate, ảnh hưởng món con |
-| 002 | Món & biến thể | [spec](002-restaurant-products/spec.md) | 001 | Default variant, lịch sử giá, availability, tương thích Product |
+| 002 | Món & biến thể | [spec](002-restaurant-foods/spec.md) | 001 | Default variant, lịch sử giá, availability, canonical Foods |
 | 003 | Khu vực & bàn | [spec](003-restaurant-layout/spec.md) | Identity | Ranh giới cấu hình/vận hành, disable an toàn |
 | 004 | Sơ đồ bàn | [spec](004-restaurant-table-operations/spec.md) | 003 | Một open session/bàn, override sức chứa/đóng bàn |
 | 005 | Gọi món | [spec](005-restaurant-ordering/spec.md) | 001, 002, 004 | Order mới mỗi lần gọi, giá server-side, idempotency, gửi bếp từng phần |

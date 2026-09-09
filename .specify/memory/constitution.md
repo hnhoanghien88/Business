@@ -1,16 +1,10 @@
 <!--
 Sync Impact Report
-- Version change: template (unratified) -> 1.0.0
+- Version change: 1.0.0 -> 1.1.0
+- Modified principles: none
 - Added principles:
-  - I. Modular Layered Architecture
-  - II. CQRS and Persistence Boundaries
-  - III. Secure Contracts and Authorization
-  - IV. Validation and Verification
-  - V. Observability and Operational Safety
-  - VI. Readable Multi-line Code Formatting
-- Added sections:
-  - Technical Constraints
-  - Development Workflow and Quality Gates
+  - VII. Concurrent List-load Coalescing
+- Added sections: none
 - Removed sections: none
 - Follow-up TODOs: none
 -->
@@ -81,6 +75,21 @@ For example:
 </Table>
 ```
 
+### VII. Concurrent List-load Coalescing
+
+Every feature that loads a list MUST coalesce concurrent in-flight requests whose normalized query
+conditions are identical, including search, filters, sort, page, and page size. All callers MUST
+share the same pending result; the in-flight entry MUST be removed after either success or failure,
+and any material query-condition difference MUST create a distinct request. This rule MUST NOT use
+stale result caching as a substitute for request coalescing.
+
+Every specification for a feature that loads a list MUST include an acceptance scenario proving
+that concurrent initial or repeated loads with identical normalized conditions produce exactly one
+network request and deliver the same result to every caller. The scenario MUST also prove that a
+changed condition creates a separate request and that a failed request can be retried. Plans and
+tasks MUST include implementation and verification work for this scenario. This prevents duplicate
+development-mode initialization, unnecessary backend load, and inconsistent list state.
+
 ## Technical Constraints
 
 - Backend changes MUST remain compatible with .NET 10 and the established ASP.NET Core, MediatR,
@@ -98,8 +107,9 @@ Every feature MUST begin with an approved specification that states user outcome
 acceptance criteria before implementation planning. Plans MUST identify affected layers, contracts,
 data changes, security effects, and verification. Tasks MUST be dependency ordered and independently
 verifiable where practical. Reviews MUST confirm constitutional compliance, readable formatting,
-successful builds, relevant test results, migration safety, and updated documentation. Any justified
-exception MUST be documented in the plan and called out in the final handoff.
+successful builds, relevant test results, migration safety, updated documentation, and—whenever a
+list is loaded—the required concurrent list-load acceptance scenario. Any justified exception MUST
+be documented in the plan and called out in the final handoff.
 
 ## Governance
 
@@ -117,4 +127,4 @@ Every implementation plan and code review MUST include a constitution compliance
 MUST be corrected before completion or documented as an explicitly approved, time-bounded exception
 with a remediation path.
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-26 | **Last Amended**: 2026-08-26
+**Version**: 1.1.0 | **Ratified**: 2026-08-26 | **Last Amended**: 2026-09-08

@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- .NET 10 SDK, Node.js, MySQL, and configured Identity/Business application `restaurant`.
+- .NET 10 SDK, Node.js, MySQL, and configured Identity/Business application `Restaurant`; application code and token audience must match this casing exactly.
 - Test users with read-only, create, update, and no-category permissions.
 - A three-level tree with active/inactive nodes, equal display orders, and foods on multiple levels.
 
@@ -53,6 +53,9 @@ browser route `/restaurant/categories`.
    revoked permission, and one in-flight request despite repeated save clicks.
 10. **Accessibility/responsiveness**: Use keyboard navigation, visible focus, meaningful labels, an
     expanded/collapsed sidebar, and a narrow drawer layout.
+11. **Concurrent initial load**: Open `/restaurant/categories` in development diagnostics and verify
+    that concurrent initial list loads with identical search, status, page, and page-size values
+    produce one network request. Change any condition and verify that a distinct request is made.
 
 ## Performance evidence
 

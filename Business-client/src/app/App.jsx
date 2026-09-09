@@ -10,7 +10,8 @@ import {
 } from "../services/identity/session.js";
 
 const LOGIN_PATH = "/login";
-const PRODUCT_PATH = "/product";
+const FOOD_PATH = "/restaurant/foods";
+const LEGACY_FOOD_PATHS = ["/product", "/restaurant/products"];
 const CATEGORY_PATH = "/restaurant/categories";
 
 const theme = createTheme({
@@ -42,7 +43,9 @@ function App() {
         if (restoredSession && ["/", LOGIN_PATH].includes(window.location.pathname)) {
           navigate(hasCategoryMenu(restoredSession.authorization?.menus)
             ? CATEGORY_PATH
-            : PRODUCT_PATH, true);
+            : FOOD_PATH, true);
+        } else if (restoredSession && LEGACY_FOOD_PATHS.includes(window.location.pathname)) {
+          navigate(FOOD_PATH, true);
         }
       })
       .catch(() => setSession(null))
@@ -58,7 +61,7 @@ function App() {
 
   const handleLogin = (nextSession) => {
     publishSession(nextSession);
-    navigate(PRODUCT_PATH, true);
+    navigate(FOOD_PATH, true);
   };
 
   const handleLogout = () => {

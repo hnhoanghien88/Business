@@ -18,19 +18,19 @@ import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import RestaurantMenuRoundedIcon from "@mui/icons-material/RestaurantMenuRounded";
 import { logout } from "../services/identity/identityClient.js";
 import { getSessionUser } from "../shared/auth/sessionUser.js";
-import { ProductPage } from "../features/restaurant/products/ProductPage.jsx";
+import { FoodsPage } from "../features/restaurant/foods/FoodsPage.jsx";
 import { CategoryPage } from "../features/restaurant/categories/CategoryPage.jsx";
 
-const PRODUCT_PATH = "/product";
+const FOOD_PATH = "/restaurant/foods";
 const CATEGORY_PATH = "/restaurant/categories";
 
 export function AppShell({ session, path, navigate, onLogout }) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [error, setError] = useState("");
   const sessionUser = getSessionUser(session);
-  const productMenu = findProductMenu(session.authorization?.menus) ?? {
-    name: "Product",
-    route: PRODUCT_PATH,
+  const foodMenu = findFoodMenu(session.authorization?.menus) ?? {
+    name: "Foods",
+    route: FOOD_PATH,
   };
   const categoryMenu = findMenu(session.authorization?.menus, "categories", CATEGORY_PATH);
 
@@ -75,11 +75,11 @@ export function AppShell({ session, path, navigate, onLogout }) {
         <Divider />
         <List className="business-menu" aria-label="Main navigation">
           <ListItemButton
-            selected={path === PRODUCT_PATH}
-            onClick={() => navigate(productMenu.route || PRODUCT_PATH)}
+            selected={path === FOOD_PATH}
+            onClick={() => navigate(foodMenu.route || FOOD_PATH)}
           >
             <ListItemIcon><RestaurantMenuRoundedIcon /></ListItemIcon>
-            <ListItemText primary={productMenu.name} />
+            <ListItemText primary={foodMenu.name} />
           </ListItemButton>
           {categoryMenu && (
             <ListItemButton
@@ -96,7 +96,7 @@ export function AppShell({ session, path, navigate, onLogout }) {
       <Box className="business-workspace">
         <Box component="header" className="business-topbar">
           <Typography className="business-page-title">
-            {path === CATEGORY_PATH ? "Nhóm món" : "Product"}
+            {path === CATEGORY_PATH ? "Nhóm món" : "Foods"}
           </Typography>
           <Box className="business-user-avatar" aria-hidden="true">
             {sessionUser.displayName.charAt(0).toUpperCase()}
@@ -107,7 +107,7 @@ export function AppShell({ session, path, navigate, onLogout }) {
           {path === CATEGORY_PATH ? (
             <CategoryPage grantedPermissions={session.authorization?.permissions} />
           ) : (
-            <ProductPage grantedPermissions={session.authorization?.permissions} />
+            <FoodsPage grantedPermissions={session.authorization?.permissions} />
           )}
         </Box>
       </Box>
@@ -124,12 +124,12 @@ function findMenu(menus = [], code, route) {
   return null;
 }
 
-function findProductMenu(menus = []) {
+function findFoodMenu(menus = []) {
   for (const menu of menus) {
-    if (menu.route === PRODUCT_PATH || menu.code?.toLowerCase() === "product") {
+    if (menu.route === FOOD_PATH || menu.code?.toLowerCase() === "foods") {
       return menu;
     }
-    const child = findProductMenu(menu.children);
+    const child = findFoodMenu(menu.children);
     if (child) return child;
   }
   return null;

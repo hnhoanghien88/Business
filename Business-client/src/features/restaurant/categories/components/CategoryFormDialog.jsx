@@ -57,8 +57,8 @@ export function CategoryFormDialog({ open, category, categories, onClose, onSubm
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             {error && <Alert severity="error">{error}</Alert>}
-            <TextField label="Mã" required value={form.code} disabled={Boolean(category)} onChange={change("code")} inputProps={{ maxLength: 50 }} />
-            <TextField label="Tên" required value={form.name} onChange={change("name")} inputProps={{ maxLength: 150 }} />
+            <TextField label="Mã" required value={form.code} disabled={Boolean(category)} onChange={change("code")} slotProps={{ htmlInput: { maxLength: 50 } }} />
+            <TextField label="Tên" required value={form.name} onChange={change("name")} slotProps={{ htmlInput: { maxLength: 150 } }} />
             <TextField select label="Nhóm cha" value={form.parentId} onChange={change("parentId")}>
               <MenuItem value="">Không có (nhóm gốc)</MenuItem>
               {categories.filter((item) =>
@@ -68,7 +68,7 @@ export function CategoryFormDialog({ open, category, categories, onClose, onSubm
                 <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>
               ))}
             </TextField>
-            <TextField label="Mô tả" multiline minRows={2} value={form.description ?? ""} onChange={change("description")} inputProps={{ maxLength: 500 }} />
+            <TextField label="Mô tả" multiline minRows={2} value={form.description ?? ""} onChange={change("description")} slotProps={{ htmlInput: { maxLength: 500 } }} />
             <TextField label="Thứ tự" type="number" value={form.displayOrder} onChange={change("displayOrder")} />
             <FormControlLabel control={<Switch checked={form.isActive} onChange={change("isActive")} />} label="Hoạt động" />
           </Stack>

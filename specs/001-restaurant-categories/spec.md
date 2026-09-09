@@ -31,6 +31,7 @@ Người quản lý thực đơn mở menu **Nhóm món** để xem cây nhóm c
 3. **Given** cây có nhiều nhóm món, **When** người dùng tìm theo một phần mã hoặc tên, **Then** kết quả phù hợp cùng đường dẫn tổ tiên được hiển thị để giữ ngữ cảnh.
 4. **Given** có nhóm hoạt động và ngừng hoạt động, **When** người dùng lọc theo trạng thái, **Then** kết quả và đường dẫn cây phản ánh đúng trạng thái đã chọn.
 5. **Given** không có kết quả phù hợp hoặc tải thất bại, **When** tải hoàn tất, **Then** trạng thái rỗng hoặc lỗi có thể thử lại được hiển thị rõ ràng.
+6. **Given** màn hình được khởi tạo hoặc hiển thị lại nhiều lượt đồng thời với cùng điều kiện danh sách, **When** dữ liệu chưa tải xong, **Then** hệ thống chỉ thực hiện một lần lấy dữ liệu và chia sẻ cùng kết quả cho các lượt hiển thị đó.
 
 ---
 
@@ -95,6 +96,7 @@ Người quản lý ngừng sử dụng một nhóm để toàn bộ nhánh và 
 - Nhóm cha bị ngừng hoạt động trong khi node con vẫn có `IsActive=true`.
 - Xóa/di chuyển nhóm đang có món, promotion hoặc nhiều hậu duệ tham chiếu.
 - Người dùng đang ở trang sau nhưng kết quả tìm kiếm hoặc cập nhật làm trang đó không còn bản ghi.
+- Màn hình được khởi tạo lặp lại trong thời gian yêu cầu danh sách có cùng điều kiện vẫn đang xử lý.
 - Nhóm bị ngừng hoạt động trong khi một màn hình gọi món đang mở; lần tải hoặc làm mới tiếp theo không được cho phép chọn món từ nhóm đó.
 - Phiên đăng nhập hết hạn hoặc quyền thay đổi trong khi người dùng đang mở form.
 - Yêu cầu tạo/cập nhật thành công nhưng phản hồi đến người dùng bị gián đoạn; thử lại không được tạo dữ liệu trùng theo cùng mã.
@@ -124,7 +126,7 @@ Người quản lý ngừng sử dụng một nhóm để toàn bộ nhánh và 
 - **FR-019**: Hệ thống MUST chỉ cung cấp các hành động tạo và cập nhật cho người dùng có permission tương ứng, đồng thời MUST từ chối yêu cầu thay đổi không được cấp quyền.
 - **FR-020**: Hệ thống MUST hiển thị trạng thái đang tải, danh sách rỗng, lỗi có thể thử lại, đang lưu và kết quả thành công theo cách không cho phép thao tác trùng.
 - **FR-021**: Hệ thống MUST hỗ trợ thao tác bằng bàn phím, focus nhìn thấy được, nhãn có ý nghĩa và bố cục dùng được khi menu trái mở rộng, thu gọn hoặc chuyển thành drawer trên màn hình nhỏ.
-- **FR-022**: Menu, route và permission của feature MUST thuộc Identity Application code `restaurant` và MUST dùng cùng mã permission giữa giao diện và dịch vụ nghiệp vụ.
+- **FR-022**: Menu, route và permission của feature MUST thuộc Identity Application code `Restaurant`; mã ứng dụng và audience MUST khớp chính xác, bao gồm chữ hoa/chữ thường, giữa Identity, giao diện và dịch vụ nghiệp vụ; mã permission MUST nhất quán trên toàn bộ luồng.
 - **FR-023**: Thay đổi trạng thái nhóm MUST được phản ánh cho các màn hình bán đang hoạt động chậm nhất ở lần làm mới dữ liệu kế tiếp.
 - **FR-024**: Mọi lỗi validation hoặc xung đột MUST chỉ rõ nguyên nhân có thể xử lý mà không làm mất dữ liệu người dùng đã nhập.
 - **FR-025**: Hệ thống MUST cho di chuyển toàn bộ nhánh sang Parent khác mà không thay đổi quan hệ nội bộ của hậu duệ.
@@ -132,12 +134,13 @@ Người quản lý ngừng sử dụng một nhóm để toàn bộ nhánh và 
 - **FR-027**: Category MAY đồng thời chứa món và category con; món vẫn thuộc đúng một category trực tiếp.
 - **FR-028**: Promotion gắn category MUST bao phủ món thuộc category đó và toàn bộ hậu duệ, theo điều kiện promotion hiện hành.
 - **FR-029**: Kích hoạt lại tổ tiên MUST không tự thay đổi trạng thái hoạt động riêng của hậu duệ hoặc món.
+- **FR-030**: Hệ thống MUST hợp nhất các lượt lấy danh sách category đồng thời có cùng điều kiện thành một yêu cầu đang xử lý; các lượt với điều kiện khác nhau MUST vẫn được xử lý độc lập.
 
 ### Key Entities
 
 - **Nhóm món (Category)**: Một node trong cây thực đơn; có Parent tùy chọn, nhiều Children, mã bất biến, thông tin hiển thị/trạng thái và có thể chứa nhiều món trực tiếp.
 - **Món ăn (Food)**: Món thuộc đúng một nhóm; nằm ngoài phạm vi quản trị của feature này nhưng quyết định ảnh hưởng khi nhóm ngừng hoạt động.
-- **Quyền truy cập nhóm món**: Quyền xem menu, đọc danh sách, tạo và cập nhật nhóm được cấp cho người dùng thông qua Identity Application code `restaurant`.
+- **Quyền truy cập nhóm món**: Quyền xem menu, đọc danh sách, tạo và cập nhật nhóm được cấp cho người dùng thông qua Identity Application code `Restaurant`.
 
 ## Success Criteria *(mandatory)*
 
@@ -153,6 +156,7 @@ Người quản lý ngừng sử dụng một nhóm để toàn bộ nhánh và 
 - **SC-008**: Toàn bộ luồng xem, tạo, sửa, ngừng và kích hoạt lại có thể hoàn thành bằng bàn phím ở các kích thước màn hình được hỗ trợ.
 - **SC-009**: 100% thao tác di chuyển không tạo chu trình và giữ nguyên cấu trúc bên trong nhánh được chuyển.
 - **SC-010**: 100% món trong nhánh có tổ tiên inactive bị loại khỏi bán mới dù category trực tiếp vẫn active.
+- **SC-011**: 100% lượt mở màn hình tạo ra nhiều yêu cầu danh sách đồng thời với cùng điều kiện chỉ được hệ thống xử lý như một lần lấy dữ liệu, không làm thay đổi kết quả hiển thị hoặc khả năng thử lại.
 
 ## Assumptions
 
@@ -163,6 +167,6 @@ Người quản lý ngừng sử dụng một nhóm để toàn bộ nhánh và 
 - Ngừng hoạt động là cơ chế loại nhóm khỏi bán hàng; hard delete và khôi phục dữ liệu đã xóa nằm ngoài phạm vi.
 - Phiên bản đầu cho phép nhập số thứ tự; kéo thả sắp xếp nằm ngoài phạm vi.
 - Mã nhóm được chuẩn hóa và so sánh không phân biệt chữ hoa/chữ thường nhưng giữ cách viết đã nhập để hiển thị.
-- Giao diện sử dụng Identity Application code `restaurant` và nguồn menu/quyền hiện có từ Identity.
+- Giao diện sử dụng Identity Application code `Restaurant` và nguồn menu/quyền hiện có từ Identity; giá trị này được xem là phân biệt chữ hoa/chữ thường tại ranh giới xác thực.
 - Các màn hình bán có thể cập nhật trạng thái category khi tải lại; realtime riêng cho category không bắt buộc trong feature này.
 - Quản lý món, giá, availability, khuyến mãi và báo cáo nằm trong các feature riêng.

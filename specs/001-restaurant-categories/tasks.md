@@ -62,6 +62,7 @@
 - [X] T022 Generate and inspect a forward-only category migration in `Business-api/src/Business.Infrastructure/Migrations/Restaurant/`
 - [X] T023 Run backend build and frontend lint/build using `Business-api/Business-api.slnx` and `Business-client/package.json`
 - [X] T024 Validate contract and manual scenarios from `specs/001-restaurant-categories/quickstart.md`
+- [X] T025 [US1] Coalesce concurrent category list reads with identical query parameters in `Business-client/src/features/restaurant/categories/api/categoriesApi.js`
 
 ## Dependencies and Execution Order
 

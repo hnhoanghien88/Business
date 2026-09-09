@@ -1,0 +1,298 @@
+openapi: 3.1.0
+info:
+  title: Restaurant Foods API
+  version: 1.0.0
+paths:
+  /api/restaurant/foods:
+    get:
+      summary: List and filter foods
+      security: [{ bearerAuth: [] }]
+      x-permission: Foods.Read
+      parameters:
+        - { name: search, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: categoryId, in: query, schema: { type: integer, format: int64, minimum: 1 } }
+        - { name: status, in: query, schema: { type: string, enum: [all, active, inactive] } }
+        - { name: availability, in: query, schema: { type: string, enum: [all, available, unavailable] } }
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200': { description: Paged foods, content: { application/json: { schema: { $ref: '#/components/schemas/FoodPageResponse' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create a food
+      security: [{ bearerAuth: [] }]
+      x-permission: Foods.Create
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateFoodRequest' } } }
+      responses:
+        '201': { description: Created food, content: { application/json: { schema: { $ref: '#/components/schemas/FoodResponse' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/restaurant/foods/{code}:
+    parameters:
+      - { name: code, in: path, required: true, schema: { type: string, maxLength: 50 } }
+    get:
+      summary: Get food with variants
+      security: [{ bearerAuth: [] }]
+      x-permission: Foods.Read
+      responses:
+        '200': { description: Food detail, content: { application/json: { schema: { $ref: '#/components/schemas/FoodResponse' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    put:
+      summary: Update food presentation, category, or lifecycle state
+      security: [{ bearerAuth: [] }]
+      x-permission: Foods.Update
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateFoodRequest' } } }
+      responses:
+        '200': { description: Updated food, content: { application/json: { schema: { $ref: '#/components/schemas/FoodResponse' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      summary: Deactivate a food while preserving history
+      security: [{ bearerAuth: [] }]
+      x-permission: Foods.Delete
+      responses:
+        '204': { description: Food deactivated }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/restaurant/foods/{code}/variants:
+    parameters:
+      - { name: code, in: path, required: true, schema: { type: string, maxLength: 50 } }
+    post:
+      summary: Create a food variant
+      security: [{ bearerAuth: [] }]
+      x-permission: Foods.Update
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/CreateVariantRequest' } } }
+      responses:
+        '201': { description: Created variant, content: { application/json: { schema: { $ref: '#/components/schemas/VariantResponse' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/restaurant/foods/{code}/variants/{variantCode}:
+    parameters:
+      - { name: code, in: path, required: true, schema: { type: string, maxLength: 50 } }
+      - { name: variantCode, in: path, required: true, schema: { type: string, maxLength: 50 } }
+    put:
+      summary: Update variant or select it as default
+      security: [{ bearerAuth: [] }]
+      x-permission: Foods.Update
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/UpdateVariantRequest' } } }
+      responses:
+        '200': { description: Updated variant, content: { application/json: { schema: { $ref: '#/components/schemas/VariantResponse' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/restaurant/foods/{code}/variants/{variantCode}/price:
+    parameters:
+      - { name: code, in: path, required: true, schema: { type: string } }
+      - { name: variantCode, in: path, required: true, schema: { type: string } }
+    put:
+      summary: Change current price and append price history
+      security: [{ bearerAuth: [] }]
+      x-permission: Foods.Update
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ChangePriceRequest' } } }
+      responses:
+        '200': { description: Variant with new price, content: { application/json: { schema: { $ref: '#/components/schemas/VariantResponse' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/restaurant/foods/{code}/variants/{variantCode}/availability:
+    parameters:
+      - { name: code, in: path, required: true, schema: { type: string } }
+      - { name: variantCode, in: path, required: true, schema: { type: string } }
+    put:
+      summary: Mark a variant available or unavailable
+      security: [{ bearerAuth: [] }]
+      x-permission: Foods.Update
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/ChangeAvailabilityRequest' } } }
+      responses:
+        '200': { description: Updated availability, content: { application/json: { schema: { $ref: '#/components/schemas/VariantResponse' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+  /api/restaurant/foods/{code}/variants/{variantCode}/prices:
+    parameters:
+      - { name: code, in: path, required: true, schema: { type: string } }
+      - { name: variantCode, in: path, required: true, schema: { type: string } }
+    get:
+      summary: Get variant price history
+      security: [{ bearerAuth: [] }]
+      x-permission: Foods.Read
+      responses:
+        '200': { description: Price history in reverse chronological order }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  schemas:
+    FoodSummary:
+      type: object
+      required: [id, categoryId, code, name, displayOrder, isActive, variantCount, isEffectivelySellable, version]
+      properties:
+        id: { type: integer, format: int64, minimum: 1 }
+        categoryId: { type: integer, format: int64, minimum: 1 }
+        categoryCode: { type: string }
+        categoryName: { type: string }
+        code: { type: string, maxLength: 50 }
+        name: { type: string, maxLength: 200 }
+        description: { type: [string, 'null'] }
+        imageUrl: { type: [string, 'null'], maxLength: 1000 }
+        displayOrder: { type: integer }
+        isActive: { type: boolean }
+        variantCount: { type: integer, minimum: 0 }
+        minimumPrice: { type: [number, 'null'], minimum: 0 }
+        maximumPrice: { type: [number, 'null'], minimum: 0 }
+        isEffectivelySellable: { type: boolean }
+        version: { type: string, format: date-time }
+    FoodDetail:
+      allOf:
+        - { $ref: '#/components/schemas/FoodSummary' }
+        - type: object
+          required: [variants]
+          properties:
+            variants: { type: array, items: { $ref: '#/components/schemas/FoodVariant' } }
+    FoodVariant:
+      type: object
+      required: [id, code, name, currentPrice, isDefault, isAvailable, displayOrder, isActive, version]
+      properties:
+        id: { type: integer, format: int64, minimum: 1 }
+        code: { type: string, maxLength: 50 }
+        name: { type: string, maxLength: 100 }
+        currentPrice: { type: number, minimum: 0 }
+        isDefault: { type: boolean }
+        isAvailable: { type: boolean }
+        soldOutReason: { type: [string, 'null'], maxLength: 500 }
+        displayOrder: { type: integer }
+        isActive: { type: boolean }
+        version: { type: string, format: date-time }
+    CreateFoodRequest:
+      type: object
+      required: [categoryId, code, name, displayOrder, isActive]
+      properties:
+        categoryId: { type: integer, format: int64, minimum: 1 }
+        code: { type: string, minLength: 1, maxLength: 50 }
+        name: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: [string, 'null'] }
+        imageUrl: { type: [string, 'null'], maxLength: 1000 }
+        displayOrder: { type: integer }
+        isActive: { type: boolean, default: true }
+    UpdateFoodRequest:
+      type: object
+      required: [categoryId, name, displayOrder, isActive, version]
+      properties:
+        categoryId: { type: integer, format: int64, minimum: 1 }
+        name: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: [string, 'null'] }
+        imageUrl: { type: [string, 'null'], maxLength: 1000 }
+        displayOrder: { type: integer }
+        isActive: { type: boolean }
+        version: { type: string, format: date-time }
+    CreateVariantRequest:
+      type: object
+      required: [code, name, currentPrice, isDefault, displayOrder, isActive]
+      properties:
+        code: { type: string, minLength: 1, maxLength: 50 }
+        name: { type: string, minLength: 1, maxLength: 100 }
+        currentPrice: { type: number, minimum: 0 }
+        isDefault: { type: boolean }
+        displayOrder: { type: integer }
+        isActive: { type: boolean }
+    UpdateVariantRequest:
+      type: object
+      required: [name, isDefault, displayOrder, isActive, version]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        isDefault: { type: boolean }
+        displayOrder: { type: integer }
+        isActive: { type: boolean }
+        version: { type: string, format: date-time }
+    ChangePriceRequest:
+      type: object
+      required: [price, version]
+      properties:
+        price: { type: number, minimum: 0 }
+        version: { type: string, format: date-time }
+    ChangeAvailabilityRequest:
+      type: object
+      required: [isAvailable, version]
+      properties:
+        isAvailable: { type: boolean }
+        reason: { type: [string, 'null'], maxLength: 500 }
+        version: { type: string, format: date-time }
+    FoodPage:
+      type: object
+      required: [items, totalCount, page, pageSize]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/FoodSummary' } }
+        totalCount: { type: integer, minimum: 0 }
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, minimum: 1, maximum: 100 }
+    ApiResponseBase:
+      type: object
+      required: [success, message]
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+    FoodPageResponse:
+      allOf:
+        - { $ref: '#/components/schemas/ApiResponseBase' }
+        - type: object
+          required: [data]
+          properties: { data: { $ref: '#/components/schemas/FoodPage' } }
+    FoodResponse:
+      allOf:
+        - { $ref: '#/components/schemas/ApiResponseBase' }
+        - type: object
+          required: [data]
+          properties: { data: { $ref: '#/components/schemas/FoodDetail' } }
+    VariantResponse:
+      allOf:
+        - { $ref: '#/components/schemas/ApiResponseBase' }
+        - type: object
+          required: [data]
+          properties: { data: { $ref: '#/components/schemas/FoodVariant' } }
+    ProblemDetails:
+      type: object
+      properties:
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        correlationId: { type: string }
+        errors: { type: object, additionalProperties: { type: array, items: { type: string } } }
+  responses:
+    ValidationError: { description: Input validation failed, content: { application/problem+json: { schema: { $ref: '#/components/schemas/ProblemDetails' } } } }
+    Unauthorized: { description: Missing, invalid, or expired access token, content: { application/problem+json: { schema: { $ref: '#/components/schemas/ProblemDetails' } } } }
+    Forbidden: { description: Current Identity permissions do not allow the operation, content: { application/problem+json: { schema: { $ref: '#/components/schemas/ProblemDetails' } } } }
+    NotFound: { description: Food or variant was not found, content: { application/problem+json: { schema: { $ref: '#/components/schemas/ProblemDetails' } } } }
+    Conflict: { description: Duplicate code, stale version, invalid default, or concurrent history change, content: { application/problem+json: { schema: { $ref: '#/components/schemas/ProblemDetails' } } } }

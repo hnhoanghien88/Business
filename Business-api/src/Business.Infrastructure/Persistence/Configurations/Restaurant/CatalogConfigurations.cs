@@ -56,7 +56,8 @@ public sealed class FoodConfiguration : IEntityTypeConfiguration<Food>
         builder.Property(food => food.IsActive).HasDefaultValue(true);
         builder.Property(food => food.CreatedDate).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
         builder.Property(food => food.UpdatedDate)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)")
+            .IsConcurrencyToken();
         builder.HasIndex(food => food.Code)
             .IsUnique()
             .HasDatabaseName("uk_foods_code");
@@ -91,7 +92,8 @@ public sealed class FoodVariantConfiguration : IEntityTypeConfiguration<FoodVari
         builder.Property(variant => variant.IsActive).HasDefaultValue(true);
         builder.Property(variant => variant.CreatedDate).HasDefaultValueSql("CURRENT_TIMESTAMP(6)");
         builder.Property(variant => variant.UpdatedDate)
-            .HasDefaultValueSql("CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)");
+            .HasDefaultValueSql("CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)")
+            .IsConcurrencyToken();
         builder.HasIndex(variant => new { variant.FoodId, variant.Code })
             .IsUnique()
             .HasDatabaseName("uk_food_variants_food_code");

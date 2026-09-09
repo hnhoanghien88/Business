@@ -1,11 +1,22 @@
 import { apiFetch } from "../../../../shared/api/apiClient.js";
 
 const PATH = "/api/restaurant/categories";
+const pendingCategoryRequests = new Map();
 
-export async function getCategories({ search = "", status = "all", page = 1, pageSize = 20 } = {}) {
+export function getCategories({ search = "", status = "all", page = 1, pageSize = 20 } = {}) {
   const query = new URLSearchParams({ status, page, pageSize });
   if (search.trim()) query.set("search", search.trim());
-  return (await apiFetch(`${PATH}?${query}`)).data;
+  const requestPath = `${PATH}?${query}`;
+
+  if (pendingCategoryRequests.has(requestPath)) {
+    return pendingCategoryRequests.get(requestPath);
+  }
+
+  const request = apiFetch(requestPath)
+    .then((response) => response.data)
+    .finally(() => pendingCategoryRequests.delete(requestPath));
+  pendingCategoryRequests.set(requestPath, request);
+  return request;
 }
 
 export async function createCategory(category) {
