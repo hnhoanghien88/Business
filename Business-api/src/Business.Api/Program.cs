@@ -1,6 +1,7 @@
 using Business.Api.Middleware;
 using Business.Api.Authentication;
 using Business.Api.Authorization;
+using Business.Api.Hubs;
 using Business.Application.Common.Behaviors;
 using Business.Application.Restaurant.Foods.CreateFood;
 using Business.Application.Restaurant.Foods.Availability;
@@ -43,6 +44,7 @@ if (performance.SlowRequestThresholdMilliseconds <= 0) throw new InvalidOperatio
 builder.Services.AddSingleton(performance);
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<RateLimitPolicyProvider>();
@@ -51,6 +53,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo { Title = "Restaurant API", Version = "v1" });
+    options.CustomSchemaIds(type => type.FullName?.Replace('+', '.') ?? type.Name);
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Type = SecuritySchemeType.Http,
@@ -91,6 +94,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
         options.Events = new JwtBearerEvents
         {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(accessToken)
+                    && context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                    context.Token = accessToken;
+                return Task.CompletedTask;
+            },
             OnTokenValidated = context =>
             {
                 if (context.Principal?.FindFirst("token_type")?.Value != "access")
@@ -173,6 +184,7 @@ app.UseAuthentication();
 app.UseMiddleware<DynamicRateLimitMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<TableOperationsHub>("/hubs/table-operations");
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
 
 app.Run();

@@ -1,4 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  HubConnectionBuilder,
+  HubConnectionState,
+  HttpTransportType,
+} from "@microsoft/signalr";
 import {
   Alert,
   Box,
@@ -20,6 +25,7 @@ import {
 } from "./api/tableOperationsApi.js";
 import { OpenTableDialog } from "./components/OpenTableDialog.jsx";
 import { SessionDialog } from "./components/SessionDialog.jsx";
+import { getSession as getAuthSession } from "../../../services/identity/session.js";
 
 export function TableOperationsPage({ grantedPermissions = [], navigate }) {
   const [tables, setTables] = useState([]);
@@ -40,28 +46,73 @@ export function TableOperationsPage({ grantedPermissions = [], navigate }) {
     try {
       const result = await getOperationalTables({ search, status });
       setTables(result);
-      setConnected(true);
       setError("");
     } catch (failure) {
-      setConnected(false);
       setError(failure.message);
     } finally {
       if (showSpinner) setLoading(false);
     }
   }, [search, status]);
 
+  const loadRef = useRef(load);
   useEffect(() => {
-    // Remote snapshot synchronization is the purpose of this effect.
+    loadRef.current = load;
+  }, [load]);
+
+  useEffect(() => {
+    // The first remote snapshot must follow the active filters.
     // oxlint-disable-next-line react/set-state-in-effect
     load(true);
-    const interval = window.setInterval(load, 2000);
-    const reconnect = () => load(true);
-    window.addEventListener("online", reconnect);
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener("online", reconnect);
-    };
   }, [load]);
+
+  useEffect(() => {
+    let disposed = false;
+    let retryTimer;
+    const connection = new HubConnectionBuilder()
+      .withUrl("/backend/hubs/table-operations", {
+        accessTokenFactory: () => getAuthSession()?.accessToken || "",
+        skipNegotiation: true,
+        transport: HttpTransportType.WebSockets,
+      })
+      .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: () => 5000,
+      })
+      .build();
+
+    connection.on("TablesChanged", () => loadRef.current());
+    connection.onreconnecting(() => setConnected(false));
+    connection.onreconnected(() => {
+      setConnected(true);
+      loadRef.current();
+    });
+    connection.onclose(() => setConnected(false));
+
+    const connect = async () => {
+      if (disposed || connection.state !== HubConnectionState.Disconnected) return;
+      try {
+        await connection.start();
+        if (!disposed) {
+          setConnected(true);
+          loadRef.current();
+        }
+      } catch {
+        if (!disposed) {
+          setConnected(false);
+          retryTimer = window.setTimeout(connect, 5000);
+        }
+      }
+    };
+
+    retryTimer = window.setTimeout(connect, 0);
+    window.addEventListener("online", connect);
+    return () => {
+      disposed = true;
+      window.clearTimeout(retryTimer);
+      window.removeEventListener("online", connect);
+      connection.off("TablesChanged");
+      connection.stop();
+    };
+  }, []);
 
   const groups = useMemo(() => Object.values(tables.reduce((result, table) => {
     const key = String(table.areaId);
@@ -134,7 +185,7 @@ export function TableOperationsPage({ grantedPermissions = [], navigate }) {
                 className={`operation-table-card status-${table.status.toLowerCase()}`}
                 variant="outlined"
               >
-                <Stack direction="row" justifyContent="space-between">
+                <Stack direction="row" sx={{ justifyContent: "space-between" }}>
                   <Typography variant="h6">{table.name}</Typography>
                   <Chip size="small" label={table.status} />
                 </Stack>

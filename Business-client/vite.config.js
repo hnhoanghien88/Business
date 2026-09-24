@@ -15,6 +15,7 @@ export default defineConfig({
         target: "https://localhost:7021",
         changeOrigin: true,
         secure: false,
+        ws: true,
         rewrite: (path) => path.slice(8),
       },
     },

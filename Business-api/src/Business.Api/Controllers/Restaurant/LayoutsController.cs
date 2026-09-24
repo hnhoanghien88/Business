@@ -1,4 +1,5 @@
 using Business.Api.Models;
+using Business.Api.Hubs;
 using Business.Application.Common.Authorization;
 using Business.Application.Restaurant.Layouts.Areas;
 using Business.Application.Restaurant.Layouts.Dtos;
@@ -6,13 +7,16 @@ using Business.Application.Restaurant.Layouts.Tables;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Business.Api.Controllers.Restaurant;
 
 [ApiController]
 [Authorize]
 [Route("api/restaurant/layouts")]
-public sealed class LayoutsController(ISender sender) : ControllerBase
+public sealed class LayoutsController(
+    ISender sender,
+    IHubContext<TableOperationsHub> tableOperationsHub) : ControllerBase
 {
     [HttpGet("areas")]
     [Authorize(Policy = LayoutsPermissions.Read)]
@@ -81,6 +85,7 @@ public sealed class LayoutsController(ISender sender) : ControllerBase
     public async Task<ActionResult<ApiResponse<TableDto>>> CreateTable(CreateTableRequest request, CancellationToken token)
     {
         var value = await sender.Send(new CreateTableCommand(request.AreaId, request.Code, request.Name, request.Capacity), token);
+        await NotifyTablesChangedAsync(token);
         return CreatedAtAction(nameof(GetTable), new { code = value.Code }, new ApiResponse<TableDto>(true, value, "Table created."));
     }
 
@@ -89,6 +94,7 @@ public sealed class LayoutsController(ISender sender) : ControllerBase
     public async Task<ActionResult<ApiResponse<TableDto>>> UpdateTable(string code, UpdateTableRequest request, CancellationToken token)
     {
         var value = await sender.Send(new UpdateTableCommand(code, request.AreaId, request.Name, request.Capacity, request.Version), token);
+        await NotifyTablesChangedAsync(token);
         return Ok(new ApiResponse<TableDto>(true, value, "Table updated."));
     }
 
@@ -97,8 +103,12 @@ public sealed class LayoutsController(ISender sender) : ControllerBase
     public async Task<ActionResult<ApiResponse<TableDto>>> SetActivation(string code, ActivationRequest request, CancellationToken token)
     {
         var value = await sender.Send(new SetTableActivationCommand(code, request.IsActive, request.Version), token);
+        await NotifyTablesChangedAsync(token);
         return Ok(new ApiResponse<TableDto>(true, value, "Table activation updated."));
     }
+
+    private Task NotifyTablesChangedAsync(CancellationToken cancellationToken) =>
+        tableOperationsHub.Clients.All.SendAsync("TablesChanged", cancellationToken);
 
     public sealed record CreateAreaRequest(string Code, string Name, string? Description, int DisplayOrder);
     public sealed record UpdateAreaRequest(string Name, string? Description, int DisplayOrder, bool IsActive, bool ConfirmImpact, DateTime Version);

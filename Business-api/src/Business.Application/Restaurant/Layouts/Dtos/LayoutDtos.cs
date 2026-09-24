@@ -7,8 +7,8 @@ public sealed record AreaDto(
     string? Description,
     int DisplayOrder,
     bool IsActive,
-    int TableCount,
-    int OpenSessionCount,
+    long TableCount,
+    long OpenSessionCount,
     DateTime Version);
 
 public sealed record TableDto(

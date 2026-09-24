@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Business.Api.Models;
+using Business.Api.Hubs;
 using Business.Application.Common.Authorization;
 using Business.Application.Restaurant.TableOperations.Commands;
 using Business.Application.Restaurant.TableOperations.Dtos;
@@ -7,6 +8,7 @@ using Business.Application.Restaurant.TableOperations.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Business.Api.Controllers.Restaurant;
 
@@ -15,7 +17,8 @@ namespace Business.Api.Controllers.Restaurant;
 [Route("api/restaurant/table-operations")]
 public sealed class TableOperationsController(
     ISender sender,
-    IAuthorizationService authorizationService) : ControllerBase
+    IAuthorizationService authorizationService,
+    IHubContext<TableOperationsHub> tableOperationsHub) : ControllerBase
 {
     [HttpGet("tables")]
     [Authorize(Policy = TableOperationsPermissions.Read)]
@@ -66,6 +69,7 @@ public sealed class TableOperationsController(
         var result = await sender.Send(
             new GetTableSessionQuery(session.Id),
             cancellationToken);
+        await NotifyTablesChangedAsync(cancellationToken);
         return Ok(new ApiResponse<TableSessionDto>(true, result, "Table opened."));
     }
 
@@ -87,6 +91,7 @@ public sealed class TableOperationsController(
         var result = await sender.Send(
             new GetTableSessionQuery(sessionId),
             cancellationToken);
+        await NotifyTablesChangedAsync(cancellationToken);
         return Ok(new ApiResponse<TableSessionDto>(true, result, "Session closed."));
     }
 
@@ -99,8 +104,12 @@ public sealed class TableOperationsController(
         await sender.Send(
             new MarkTableCleanCommand(code, ActorId()),
             cancellationToken);
+        await NotifyTablesChangedAsync(cancellationToken);
         return Ok(new ApiResponse<bool>(true, true, "Table marked Available."));
     }
+
+    private Task NotifyTablesChangedAsync(CancellationToken cancellationToken) =>
+        tableOperationsHub.Clients.All.SendAsync("TablesChanged", cancellationToken);
 
     private async Task RequireOverrideAsync(bool requested)
     {

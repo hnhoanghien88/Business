@@ -41,7 +41,23 @@ public sealed class DapperLayoutsReadRepository(MySqlConnectionFactory connectio
               t.UpdatedDate Version
             FROM restaurant_tables t JOIN restaurant_areas a ON a.Id=t.AreaId
             """;
-        var rows = (await connection.QueryAsync<TableDto>(new CommandDefinition(sql, cancellationToken: token))).AsList();
+        var rows = (await connection.QueryAsync<TableReadRow>(new CommandDefinition(sql, cancellationToken: token)))
+            .Select(x => new TableDto(
+                x.Id,
+                x.AreaId,
+                x.AreaCode,
+                x.AreaName,
+                x.AreaIsActive,
+                x.Code,
+                x.Name,
+                x.Capacity,
+                x.Status,
+                x.IsActive,
+                x.HasOpenSession != 0,
+                x.CanMove != 0,
+                x.CanDisable != 0,
+                x.Version))
+            .ToList();
         var query = rows.Where(x => (!areaId.HasValue || x.AreaId == areaId) && (!isActive.HasValue || x.IsActive == isActive) && (string.IsNullOrWhiteSpace(status) || status == "all" || string.Equals(x.Status, status, StringComparison.OrdinalIgnoreCase)) && (string.IsNullOrWhiteSpace(search) || x.Code.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase) || x.Name.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase)));
         query = sort.ToLowerInvariant() switch { "name" => query.OrderBy(x => x.Name), "code" => query.OrderBy(x => x.Code), "capacity" => query.OrderBy(x => x.Capacity).ThenBy(x => x.Code), "status" => query.OrderBy(x => x.Status).ThenBy(x => x.Code), _ => query.OrderBy(x => x.AreaName).ThenBy(x => x.Name).ThenBy(x => x.Code) };
         var values = query.ToList();
@@ -50,4 +66,20 @@ public sealed class DapperLayoutsReadRepository(MySqlConnectionFactory connectio
 
     public async Task<TableDto?> GetTableAsync(string code, CancellationToken token) =>
         (await GetTablesAsync(code, null, null, null, "code", 1, 100, token)).Items.FirstOrDefault(x => string.Equals(x.Code, code, StringComparison.OrdinalIgnoreCase));
+
+    private sealed record TableReadRow(
+        ulong Id,
+        ulong AreaId,
+        string AreaCode,
+        string AreaName,
+        bool AreaIsActive,
+        string Code,
+        string Name,
+        int Capacity,
+        string Status,
+        bool IsActive,
+        long HasOpenSession,
+        long CanMove,
+        long CanDisable,
+        DateTime Version);
 }

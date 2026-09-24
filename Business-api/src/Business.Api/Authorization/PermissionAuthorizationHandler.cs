@@ -16,14 +16,17 @@ public sealed class PermissionAuthorizationHandler(
         var userId = context.User.FindFirstValue("sub");
         var permissionVersion = context.User.FindFirstValue("permissionversion");
         var authorization = httpContext?.Request.Headers.Authorization.ToString();
+        var accessToken = authorization?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true
+            ? authorization["Bearer ".Length..].Trim()
+            : httpContext?.Request.Path.StartsWithSegments("/hubs") == true
+                ? httpContext.Request.Query["access_token"].ToString()
+                : null;
 
         if (userId is null
             || permissionVersion is null
-            || authorization is null
-            || !authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            || string.IsNullOrWhiteSpace(accessToken))
             return;
 
-        var accessToken = authorization["Bearer ".Length..].Trim();
         if (await permissions.HasPermissionAsync(
                 userId,
                 permissionVersion,

@@ -30,7 +30,7 @@ export function OrderingPage() {
   if (!sessionId) return <Alert severity="warning">Thiếu sessionId để gọi món.</Alert>;
   if (!menu) return <CircularProgress aria-label="Đang tải menu" />;
   return <Stack spacing={2}>
-    <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between"><Typography variant="h5">Gọi món · {menu.tableCode}</Typography><Typography>Tổng lượt bàn: {(history?.totalAmount || 0).toLocaleString("vi-VN")} ₫</Typography></Stack>
+    <Stack direction={{ xs: "column", md: "row" }} sx={{ justifyContent: "space-between" }}><Typography variant="h5">Gọi món · {menu.tableCode}</Typography><Typography>Tổng lượt bàn: {(history?.totalAmount || 0).toLocaleString("vi-VN")} ₫</Typography></Stack>
     {message && <Alert severity={message.startsWith("Đã gửi") ? "success" : "error"}>{message}</Alert>}
     <Stack direction={{ xs: "column", md: "row" }} spacing={2}><Box flex={2}>
       <Stack direction="row" spacing={1} mb={2}><TextField fullWidth label="Tìm món" value={search} onChange={(e) => setSearch(e.target.value)} /><TextField select label="Nhóm" value={categoryId} onChange={(e) => setCategoryId(e.target.value)} sx={{ minWidth: 160 }}><MenuItem value="">Tất cả</MenuItem>{menu.categories.map((x) => <MenuItem key={x.id} value={x.id}>{x.name}</MenuItem>)}</TextField></Stack>

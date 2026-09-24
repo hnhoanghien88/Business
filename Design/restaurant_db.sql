@@ -1,574 +1,742 @@
--- ============================================================
--- Restaurant Management System - MySQL 8.x
--- Generated: 2026-08-26
--- Charset: utf8mb4
--- ============================================================
+-- MySQL dump 10.13  Distrib 8.0.46, for Win64 (x86_64)
+--
+-- Host: localhost    Database: restaurant_db
+-- ------------------------------------------------------
+-- Server version	8.0.46
 
-CREATE DATABASE IF NOT EXISTS restaurant_db
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_0900_ai_ci;
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-USE restaurant_db;
+--
+-- Table structure for table `__efmigrationshistory`
+--
 
-SET NAMES utf8mb4;
-SET time_zone = '+07:00';
+DROP TABLE IF EXISTS `__efmigrationshistory`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `__efmigrationshistory` (
+  `MigrationId` varchar(150) NOT NULL,
+  `ProductVersion` varchar(32) NOT NULL,
+  PRIMARY KEY (`MigrationId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- NOTE:
--- 1) CreatedBy / UpdatedBy / *_by fields intentionally do not have a FK.
---    They can store user IDs from a separate Identity service/database.
--- 2) Money uses DECIMAL(18,2).
--- 3) Status columns are VARCHAR so the workflow can evolve without ALTER ENUM.
+--
+-- Dumping data for table `__efmigrationshistory`
+--
 
--- ============================================================
--- 1. RESTAURANT LAYOUT
--- ============================================================
+LOCK TABLES `__efmigrationshistory` WRITE;
+/*!40000 ALTER TABLE `__efmigrationshistory` DISABLE KEYS */;
+INSERT INTO `__efmigrationshistory` VALUES ('20260820081749_InitialDB','10.0.7'),('20260820082036_AddProduct','10.0.7'),('20260825041949_AddRateLimitPolicies','10.0.7'),('20260825053918_RestaurantInitial','10.0.7'),('20260831040821_ConsolidateProductsIntoFoods','10.0.7'),('20260831054105_PrefixRestaurantTables','10.0.7'),('20260831061226_RestaurantCategoriesManagement','10.0.7'),('20260903093543_RestaurantFoodsManagement','10.0.7'),('20260909055744_RestaurantLayoutsTableOperationsOrdering','10.0.7');
+/*!40000 ALTER TABLE `__efmigrationshistory` ENABLE KEYS */;
+UNLOCK TABLES;
 
-CREATE TABLE IF NOT EXISTS restaurant_areas (
-    Id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    Code            VARCHAR(50) NOT NULL,
-    Name            VARCHAR(150) NOT NULL,
-    Description     VARCHAR(500) NULL,
-    DisplayOrder   INT NOT NULL DEFAULT 0,
-    IsActive       TINYINT(1) NOT NULL DEFAULT 1,
-    CreatedBy      BIGINT UNSIGNED NULL,
-    CreatedDate    DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedBy      BIGINT UNSIGNED NULL,
-    UpdatedDate    DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    UNIQUE KEY uk_restaurant_areas_code (Code),
-    KEY ix_restaurant_areas_active_order (IsActive, DisplayOrder)
-) ENGINE=InnoDB;
+--
+-- Table structure for table `restaurant_areas`
+--
 
-CREATE TABLE IF NOT EXISTS restaurant_tables (
-    Id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    AreaId         BIGINT UNSIGNED NOT NULL,
-    Code            VARCHAR(50) NOT NULL,
-    Name            VARCHAR(150) NOT NULL,
-    Capacity        INT NOT NULL,
-    Status          VARCHAR(30) NOT NULL DEFAULT 'Available',
-    IsActive       TINYINT(1) NOT NULL DEFAULT 1,
-    CreatedBy      BIGINT UNSIGNED NULL,
-    CreatedDate    DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedBy      BIGINT UNSIGNED NULL,
-    UpdatedDate    DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    UNIQUE KEY uk_restaurant_tables_code (Code),
-    KEY ix_restaurant_tables_area_status (AreaId, Status, IsActive),
-    CONSTRAINT fk_restaurant_tables_area
-        FOREIGN KEY (AreaId) REFERENCES restaurant_areas(Id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT chk_restaurant_tables_capacity CHECK (Capacity > 0),
-    CONSTRAINT chk_restaurant_tables_status CHECK (Status IN ('Available','Occupied','Reserved','Cleaning','Disabled'))
-) ENGINE=InnoDB;
+DROP TABLE IF EXISTS `restaurant_areas`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_areas` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `Code` varchar(50) NOT NULL,
+  `Name` varchar(150) NOT NULL,
+  `Description` varchar(500) DEFAULT NULL,
+  `DisplayOrder` int NOT NULL DEFAULT '0',
+  `IsActive` tinyint(1) NOT NULL DEFAULT '1',
+  `CreatedBy` bigint unsigned DEFAULT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `UpdatedBy` bigint unsigned DEFAULT NULL,
+  `UpdatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `uk_restaurant_areas_code` (`Code`),
+  KEY `ix_restaurant_areas_active_order` (`IsActive`,`DisplayOrder`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE IF NOT EXISTS restaurant_table_sessions (
-    Id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    TableId        BIGINT UNSIGNED NOT NULL,
-    GuestCount     INT NOT NULL DEFAULT 1,
-    Status          VARCHAR(30) NOT NULL DEFAULT 'Open',
-    OpenedDate     DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    ClosedDate     DATETIME(6) NULL,
-    OpenedBy       BIGINT UNSIGNED NULL,
-    ClosedBy       BIGINT UNSIGNED NULL,
-    Note            VARCHAR(500) NULL,
-    CreatedDate    DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedDate    DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    KEY ix_table_sessions_table_status (TableId, Status),
-    KEY ix_table_sessions_opened_date (OpenedDate),
-    CONSTRAINT fk_table_sessions_table
-        FOREIGN KEY (TableId) REFERENCES restaurant_tables(Id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT chk_table_sessions_guest_count CHECK (GuestCount > 0),
-    CONSTRAINT chk_table_sessions_status CHECK (Status IN ('Open','Closed','Cancelled'))
-) ENGINE=InnoDB;
+--
+-- Dumping data for table `restaurant_areas`
+--
 
--- ============================================================
--- 2. MENU / CATALOG
--- ============================================================
+LOCK TABLES `restaurant_areas` WRITE;
+/*!40000 ALTER TABLE `restaurant_areas` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_areas` ENABLE KEYS */;
+UNLOCK TABLES;
 
-CREATE TABLE IF NOT EXISTS restaurant_categories (
-    Id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    ParentId        BIGINT UNSIGNED NULL,
-    Code            VARCHAR(50) NOT NULL,
-    Name            VARCHAR(150) NOT NULL,
-    Description     VARCHAR(500) NULL,
-    DisplayOrder   INT NOT NULL DEFAULT 0,
-    IsActive       TINYINT(1) NOT NULL DEFAULT 1,
-    CreatedBy      BIGINT UNSIGNED NULL,
-    CreatedDate    DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedBy      BIGINT UNSIGNED NULL,
-    UpdatedDate    DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    UNIQUE KEY uk_categories_code (Code),
-    KEY ix_categories_active_order (IsActive, DisplayOrder),
-    KEY ix_categories_parent_order (ParentId, DisplayOrder, Name),
-    CONSTRAINT fk_categories_parent
-        FOREIGN KEY (ParentId) REFERENCES restaurant_categories(Id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT chk_categories_not_self_parent CHECK (ParentId IS NULL OR ParentId <> Id)
-) ENGINE=InnoDB;
+--
+-- Table structure for table `restaurant_categories`
+--
 
-CREATE TABLE IF NOT EXISTS restaurant_foods (
-    Id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    CategoryId     BIGINT UNSIGNED NOT NULL,
-    Code            VARCHAR(50) NOT NULL,
-    Name            VARCHAR(200) NOT NULL,
-    Description     TEXT NULL,
-    ImageUrl       VARCHAR(1000) NULL,
-    DisplayOrder   INT NOT NULL DEFAULT 0,
-    IsActive       TINYINT(1) NOT NULL DEFAULT 1,
-    CreatedBy      BIGINT UNSIGNED NULL,
-    CreatedDate    DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedBy      BIGINT UNSIGNED NULL,
-    UpdatedDate    DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    UNIQUE KEY uk_foods_code (Code),
-    KEY ix_foods_category_active (CategoryId, IsActive, DisplayOrder),
-    CONSTRAINT fk_foods_category
-        FOREIGN KEY (CategoryId) REFERENCES restaurant_categories(Id)
-        ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE=InnoDB;
+DROP TABLE IF EXISTS `restaurant_categories`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_categories` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `ParentId` bigint unsigned DEFAULT NULL,
+  `Code` varchar(50) NOT NULL,
+  `Name` varchar(150) NOT NULL,
+  `Description` varchar(500) DEFAULT NULL,
+  `DisplayOrder` int NOT NULL DEFAULT '0',
+  `IsActive` tinyint(1) NOT NULL DEFAULT '1',
+  `CreatedBy` bigint unsigned DEFAULT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `UpdatedBy` bigint unsigned DEFAULT NULL,
+  `UpdatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `uk_categories_code` (`Code`),
+  KEY `ix_categories_active_order` (`IsActive`,`DisplayOrder`),
+  KEY `ix_categories_parent_order` (`ParentId`,`DisplayOrder`,`Name`,`Code`),
+  CONSTRAINT `fk_categories_parent` FOREIGN KEY (`ParentId`) REFERENCES `restaurant_categories` (`Id`) ON DELETE RESTRICT
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE IF NOT EXISTS restaurant_food_variants (
-    Id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    FoodId             BIGINT UNSIGNED NOT NULL,
-    Code                VARCHAR(50) NOT NULL,
-    Name                VARCHAR(100) NOT NULL,
-    CurrentPrice       DECIMAL(18,2) NOT NULL DEFAULT 0.00,
-    IsDefault          TINYINT(1) NOT NULL DEFAULT 0,
-    IsAvailable        TINYINT(1) NOT NULL DEFAULT 1,
-    SoldOutReason     VARCHAR(500) NULL,
-    DisplayOrder       INT NOT NULL DEFAULT 0,
-    IsActive           TINYINT(1) NOT NULL DEFAULT 1,
-    CreatedBy          BIGINT UNSIGNED NULL,
-    CreatedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedBy          BIGINT UNSIGNED NULL,
-    UpdatedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    UNIQUE KEY uk_food_variants_food_code (FoodId, Code),
-    KEY ix_food_variants_food_available (FoodId, IsActive, IsAvailable, DisplayOrder),
-    CONSTRAINT fk_food_variants_food
-        FOREIGN KEY (FoodId) REFERENCES restaurant_foods(Id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT chk_food_variants_price CHECK (CurrentPrice >= 0)
-) ENGINE=InnoDB;
+--
+-- Dumping data for table `restaurant_categories`
+--
 
-CREATE TABLE IF NOT EXISTS restaurant_food_price_histories (
-    Id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    FoodVariantId     BIGINT UNSIGNED NOT NULL,
-    Price               DECIMAL(18,2) NOT NULL,
-    EffectiveFrom      DATETIME(6) NOT NULL,
-    EffectiveTo        DATETIME(6) NULL,
-    CreatedBy          BIGINT UNSIGNED NULL,
-    CreatedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    KEY ix_food_price_histories_variant_dates (FoodVariantId, EffectiveFrom, EffectiveTo),
-    CONSTRAINT fk_food_price_histories_variant
-        FOREIGN KEY (FoodVariantId) REFERENCES restaurant_food_variants(Id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT chk_food_price_histories_price CHECK (Price >= 0),
-    CONSTRAINT chk_food_price_histories_dates CHECK (EffectiveTo IS NULL OR EffectiveTo > EffectiveFrom)
-) ENGINE=InnoDB;
+LOCK TABLES `restaurant_categories` WRITE;
+/*!40000 ALTER TABLE `restaurant_categories` DISABLE KEYS */;
+INSERT INTO `restaurant_categories` VALUES (1,NULL,'DA','Đồ ăn','Đồ ăn',0,1,NULL,'2026-09-03 04:04:12.107644',NULL,'2026-09-03 04:04:12.107644'),(2,NULL,'DU','Đồ uống','Đồ uống',0,1,NULL,'2026-09-03 04:04:30.870771',NULL,'2026-09-03 04:04:30.870771'),(3,2,'TS','Trà sữa','Trà sữa',0,1,NULL,'2026-09-03 04:04:55.295933',NULL,'2026-09-03 04:04:55.295933'),(4,1,'BA','Bánh mì','Bánh mì',0,1,NULL,'2026-09-03 04:05:28.845668',NULL,'2026-09-03 04:05:28.845668');
+/*!40000 ALTER TABLE `restaurant_categories` ENABLE KEYS */;
+UNLOCK TABLES;
 
--- ============================================================
--- 3. PROMOTIONS
--- ============================================================
+--
+-- Table structure for table `restaurant_food_price_histories`
+--
 
-CREATE TABLE IF NOT EXISTS restaurant_promotion_codes (
-    Id                      BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    Code                    VARCHAR(50) NOT NULL,
-    Name                    VARCHAR(200) NOT NULL,
-    Description             VARCHAR(1000) NULL,
-    DiscountType           VARCHAR(30) NOT NULL,
-    DiscountValue          DECIMAL(18,2) NOT NULL,
-    MinOrderAmount        DECIMAL(18,2) NULL,
-    MaxDiscountAmount     DECIMAL(18,2) NULL,
-    StartDate              DATETIME(6) NOT NULL,
-    EndDate                DATETIME(6) NOT NULL,
-    UsageLimit             INT NULL,
-    UsageCount             INT NOT NULL DEFAULT 0,
-    IsActive               TINYINT(1) NOT NULL DEFAULT 1,
-    CreatedBy              BIGINT UNSIGNED NULL,
-    CreatedDate            DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedBy              BIGINT UNSIGNED NULL,
-    UpdatedDate            DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    UNIQUE KEY uk_promotion_codes_code (Code),
-    KEY ix_promotion_codes_validity (IsActive, StartDate, EndDate),
-    CONSTRAINT chk_promotion_codes_type CHECK (DiscountType IN ('Percentage','FixedAmount')),
-    CONSTRAINT chk_promotion_codes_value CHECK (DiscountValue > 0),
-    CONSTRAINT chk_promotion_codes_dates CHECK (EndDate > StartDate),
-    CONSTRAINT chk_promotion_codes_usage CHECK (UsageLimit IS NULL OR UsageLimit >= 0),
-    CONSTRAINT chk_promotion_codes_usage_count CHECK (UsageCount >= 0)
-) ENGINE=InnoDB;
+DROP TABLE IF EXISTS `restaurant_food_price_histories`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_food_price_histories` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `FoodVariantId` bigint unsigned NOT NULL,
+  `Price` decimal(18,2) NOT NULL,
+  `EffectiveFrom` datetime(6) NOT NULL,
+  `EffectiveTo` datetime(6) DEFAULT NULL,
+  `CreatedBy` bigint unsigned DEFAULT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  KEY `ix_food_price_histories_variant_dates` (`FoodVariantId`,`EffectiveFrom`,`EffectiveTo`),
+  CONSTRAINT `fk_food_price_histories_variant` FOREIGN KEY (`FoodVariantId`) REFERENCES `restaurant_food_variants` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `chk_food_price_histories_dates` CHECK (((`EffectiveTo` is null) or (`EffectiveTo` > `EffectiveFrom`))),
+  CONSTRAINT `chk_food_price_histories_price` CHECK ((`Price` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE IF NOT EXISTS restaurant_promotion_foods (
-    PromotionId       BIGINT UNSIGNED NOT NULL,
-    FoodId            BIGINT UNSIGNED NOT NULL,
-    PRIMARY KEY (PromotionId, FoodId),
-    KEY ix_promotion_foods_food (FoodId),
-    CONSTRAINT fk_promotion_foods_promotion
-        FOREIGN KEY (PromotionId) REFERENCES restaurant_promotion_codes(Id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_promotion_foods_food
-        FOREIGN KEY (FoodId) REFERENCES restaurant_foods(Id)
-        ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB;
+--
+-- Dumping data for table `restaurant_food_price_histories`
+--
 
-CREATE TABLE IF NOT EXISTS restaurant_promotion_categories (
-    PromotionId       BIGINT UNSIGNED NOT NULL,
-    CategoryId        BIGINT UNSIGNED NOT NULL,
-    PRIMARY KEY (PromotionId, CategoryId),
-    KEY ix_promotion_categories_category (CategoryId),
-    CONSTRAINT fk_promotion_categories_promotion
-        FOREIGN KEY (PromotionId) REFERENCES restaurant_promotion_codes(Id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_promotion_categories_category
-        FOREIGN KEY (CategoryId) REFERENCES restaurant_categories(Id)
-        ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB;
+LOCK TABLES `restaurant_food_price_histories` WRITE;
+/*!40000 ALTER TABLE `restaurant_food_price_histories` DISABLE KEYS */;
+INSERT INTO `restaurant_food_price_histories` VALUES (1,1,30000.00,'2026-09-08 07:24:54.354542',NULL,1,'2026-09-08 07:24:54.354542'),(2,2,40000.00,'2026-09-08 07:25:26.123622',NULL,1,'2026-09-08 07:25:26.123622'),(3,3,20000.00,'2026-09-08 07:26:18.450960','2026-09-08 07:30:11.687962',1,'2026-09-08 07:26:18.450960'),(4,3,25000.00,'2026-09-08 07:30:11.687962',NULL,1,'2026-09-08 07:30:11.687962');
+/*!40000 ALTER TABLE `restaurant_food_price_histories` ENABLE KEYS */;
+UNLOCK TABLES;
 
--- ============================================================
--- 4. ORDERS
--- ============================================================
+--
+-- Table structure for table `restaurant_food_variants`
+--
 
-CREATE TABLE IF NOT EXISTS restaurant_orders (
-    Id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    OrderNo            VARCHAR(50) NOT NULL,
-    TableSessionId    BIGINT UNSIGNED NULL,
-    CustomerId         BIGINT UNSIGNED NULL,
-    OrderType          VARCHAR(30) NOT NULL DEFAULT 'DineIn',
-    Status              VARCHAR(30) NOT NULL DEFAULT 'Pending',
-    SubtotalAmount     DECIMAL(18,2) NOT NULL DEFAULT 0.00,
-    DiscountAmount     DECIMAL(18,2) NOT NULL DEFAULT 0.00,
-    TaxAmount          DECIMAL(18,2) NOT NULL DEFAULT 0.00,
-    TotalAmount        DECIMAL(18,2) NOT NULL DEFAULT 0.00,
-    Note                VARCHAR(1000) NULL,
-    OrderedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    CompletedDate      DATETIME(6) NULL,
-    CreatedBy          BIGINT UNSIGNED NULL,
-    CreatedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedBy          BIGINT UNSIGNED NULL,
-    UpdatedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    UNIQUE KEY uk_orders_order_no (OrderNo),
-    KEY ix_orders_ordered_date_status (OrderedDate, Status),
-    KEY ix_orders_table_session (TableSessionId),
-    KEY ix_orders_customer (CustomerId),
-    CONSTRAINT fk_orders_table_session
-        FOREIGN KEY (TableSessionId) REFERENCES restaurant_table_sessions(Id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT chk_orders_type CHECK (OrderType IN ('DineIn','TakeAway','Delivery')),
-    CONSTRAINT chk_orders_status CHECK (Status IN ('Draft','Pending','Confirmed','Serving','Completed','Cancelled')),
-    CONSTRAINT chk_orders_amounts CHECK (
-        SubtotalAmount >= 0 AND DiscountAmount >= 0 AND TaxAmount >= 0 AND TotalAmount >= 0
-    )
-) ENGINE=InnoDB;
+DROP TABLE IF EXISTS `restaurant_food_variants`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_food_variants` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `FoodId` bigint unsigned NOT NULL,
+  `Code` varchar(50) NOT NULL,
+  `Name` varchar(100) NOT NULL,
+  `CurrentPrice` decimal(18,2) NOT NULL DEFAULT '0.00',
+  `IsDefault` tinyint(1) NOT NULL DEFAULT '0',
+  `IsAvailable` tinyint(1) NOT NULL DEFAULT '1',
+  `SoldOutReason` varchar(500) DEFAULT NULL,
+  `DisplayOrder` int NOT NULL DEFAULT '0',
+  `IsActive` tinyint(1) NOT NULL DEFAULT '1',
+  `CreatedBy` bigint unsigned DEFAULT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `UpdatedBy` bigint unsigned DEFAULT NULL,
+  `UpdatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `uk_food_variants_food_code` (`FoodId`,`Code`),
+  KEY `ix_food_variants_food_available` (`FoodId`,`IsActive`,`IsAvailable`,`DisplayOrder`),
+  CONSTRAINT `fk_food_variants_food` FOREIGN KEY (`FoodId`) REFERENCES `restaurant_foods` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `chk_food_variants_price` CHECK ((`CurrentPrice` >= 0))
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE IF NOT EXISTS restaurant_order_items (
-    Id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    OrderId            BIGINT UNSIGNED NOT NULL,
-    FoodId             BIGINT UNSIGNED NOT NULL,
-    FoodVariantId     BIGINT UNSIGNED NOT NULL,
-    FoodCode           VARCHAR(50) NOT NULL,
-    FoodName           VARCHAR(200) NOT NULL,
-    VariantName        VARCHAR(100) NOT NULL,
-    Quantity            DECIMAL(18,3) NOT NULL,
-    UnitPrice          DECIMAL(18,2) NOT NULL,
-    DiscountAmount     DECIMAL(18,2) NOT NULL DEFAULT 0.00,
-    TotalAmount        DECIMAL(18,2) NOT NULL,
-    Note                VARCHAR(500) NULL,
-    Status              VARCHAR(30) NOT NULL DEFAULT 'Pending',
-    CreatedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    KEY ix_order_items_order_status (OrderId, Status),
-    KEY ix_order_items_food (FoodId),
-    KEY ix_order_items_variant (FoodVariantId),
-    CONSTRAINT fk_order_items_order
-        FOREIGN KEY (OrderId) REFERENCES restaurant_orders(Id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_order_items_food
-        FOREIGN KEY (FoodId) REFERENCES restaurant_foods(Id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT fk_order_items_variant
-        FOREIGN KEY (FoodVariantId) REFERENCES restaurant_food_variants(Id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT chk_order_items_quantity CHECK (Quantity > 0),
-    CONSTRAINT chk_order_items_amounts CHECK (UnitPrice >= 0 AND DiscountAmount >= 0 AND TotalAmount >= 0),
-    CONSTRAINT chk_order_items_status CHECK (Status IN ('Pending','Accepted','Preparing','Ready','Served','Completed','Cancelled','Rejected'))
-) ENGINE=InnoDB;
+--
+-- Dumping data for table `restaurant_food_variants`
+--
 
-CREATE TABLE IF NOT EXISTS restaurant_order_promotions (
-    Id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    OrderId            BIGINT UNSIGNED NOT NULL,
-    PromotionId        BIGINT UNSIGNED NOT NULL,
-    PromotionCode      VARCHAR(50) NOT NULL,
-    PromotionName      VARCHAR(200) NOT NULL,
-    DiscountAmount     DECIMAL(18,2) NOT NULL,
-    CreatedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    UNIQUE KEY uk_order_promotions_order_promotion (OrderId, PromotionId),
-    KEY ix_order_promotions_promotion (PromotionId),
-    CONSTRAINT fk_order_promotions_order
-        FOREIGN KEY (OrderId) REFERENCES restaurant_orders(Id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_order_promotions_promotion
-        FOREIGN KEY (PromotionId) REFERENCES restaurant_promotion_codes(Id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT chk_order_promotions_discount CHECK (DiscountAmount >= 0)
-) ENGINE=InnoDB;
+LOCK TABLES `restaurant_food_variants` WRITE;
+/*!40000 ALTER TABLE `restaurant_food_variants` DISABLE KEYS */;
+INSERT INTO `restaurant_food_variants` VALUES (1,1,'TS-01','M',30000.00,1,1,NULL,0,1,1,'2026-09-08 07:24:54.354542',1,'2026-09-08 07:24:54.354542'),(2,2,'TS02-1','M',40000.00,1,1,NULL,0,1,1,'2026-09-08 07:25:26.123622',1,'2026-09-08 07:25:26.123622'),(3,1,'TS01-2','L',25000.00,0,1,NULL,0,1,1,'2026-09-08 07:26:18.450960',1,'2026-09-08 07:30:11.704926');
+/*!40000 ALTER TABLE `restaurant_food_variants` ENABLE KEYS */;
+UNLOCK TABLES;
 
-CREATE TABLE IF NOT EXISTS restaurant_order_status_histories (
-    Id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    OrderId            BIGINT UNSIGNED NOT NULL,
-    FromStatus         VARCHAR(30) NULL,
-    ToStatus           VARCHAR(30) NOT NULL,
-    Note                VARCHAR(500) NULL,
-    ChangedBy          BIGINT UNSIGNED NULL,
-    ChangedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    KEY ix_order_status_histories_order_date (OrderId, ChangedDate),
-    CONSTRAINT fk_order_status_histories_order
-        FOREIGN KEY (OrderId) REFERENCES restaurant_orders(Id)
-        ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB;
+--
+-- Table structure for table `restaurant_foods`
+--
 
--- ============================================================
--- 5. KITCHEN
--- ============================================================
+DROP TABLE IF EXISTS `restaurant_foods`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_foods` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `CategoryId` bigint unsigned NOT NULL,
+  `Code` varchar(50) NOT NULL,
+  `Name` varchar(200) NOT NULL,
+  `Description` text,
+  `ImageUrl` varchar(1000) DEFAULT NULL,
+  `DisplayOrder` int NOT NULL DEFAULT '0',
+  `IsActive` tinyint(1) NOT NULL DEFAULT '1',
+  `CreatedBy` bigint unsigned DEFAULT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `UpdatedBy` bigint unsigned DEFAULT NULL,
+  `UpdatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `uk_foods_code` (`Code`),
+  KEY `ix_foods_category_active` (`CategoryId`,`IsActive`,`DisplayOrder`),
+  CONSTRAINT `fk_foods_category` FOREIGN KEY (`CategoryId`) REFERENCES `restaurant_categories` (`Id`) ON DELETE RESTRICT
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE IF NOT EXISTS restaurant_kitchen_orders (
-    Id                      BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    OrderId                BIGINT UNSIGNED NOT NULL,
-    KitchenNo              VARCHAR(50) NOT NULL,
-    Status                  VARCHAR(30) NOT NULL DEFAULT 'Pending',
-    SentToKitchenDate    DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    AcceptedBy             BIGINT UNSIGNED NULL,
-    AcceptedDate           DATETIME(6) NULL,
-    StartedDate            DATETIME(6) NULL,
-    ReadyDate              DATETIME(6) NULL,
-    CompletedDate          DATETIME(6) NULL,
-    Note                    VARCHAR(500) NULL,
-    CreatedDate            DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedDate            DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    UNIQUE KEY uk_kitchen_orders_kitchen_no (KitchenNo),
-    KEY ix_kitchen_orders_order (OrderId),
-    KEY ix_kitchen_orders_status_sent (Status, SentToKitchenDate),
-    CONSTRAINT fk_kitchen_orders_order
-        FOREIGN KEY (OrderId) REFERENCES restaurant_orders(Id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_kitchen_orders_status CHECK (Status IN ('Pending','Accepted','Preparing','Ready','Completed','Rejected','Cancelled'))
-) ENGINE=InnoDB;
+--
+-- Dumping data for table `restaurant_foods`
+--
 
-CREATE TABLE IF NOT EXISTS restaurant_kitchen_order_items (
-    Id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    KitchenOrderId    BIGINT UNSIGNED NOT NULL,
-    OrderItemId       BIGINT UNSIGNED NOT NULL,
-    Quantity            DECIMAL(18,3) NOT NULL,
-    Status              VARCHAR(30) NOT NULL DEFAULT 'Pending',
-    StartedDate        DATETIME(6) NULL,
-    ReadyDate          DATETIME(6) NULL,
-    CompletedDate      DATETIME(6) NULL,
-    Note                VARCHAR(500) NULL,
-    CreatedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    -- Một OrderItem có thể nằm ở nhiều KitchenOrder khi gửi bếp từng phần.
-    -- Trong cùng một phiếu bếp, mỗi OrderItem chỉ xuất hiện một lần.
-    UNIQUE KEY uk_kitchen_order_items_pair (KitchenOrderId, OrderItemId),
-    KEY ix_kitchen_order_items_status (Status),
-    KEY ix_kitchen_order_items_order_item (OrderItemId),
-    CONSTRAINT fk_kitchen_order_items_kitchen_order
-        FOREIGN KEY (KitchenOrderId) REFERENCES restaurant_kitchen_orders(Id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_kitchen_order_items_order_item
-        FOREIGN KEY (OrderItemId) REFERENCES restaurant_order_items(Id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT chk_kitchen_order_items_quantity CHECK (Quantity > 0),
-    CONSTRAINT chk_kitchen_order_items_status CHECK (Status IN ('Pending','Accepted','Preparing','Ready','Completed','Rejected','Cancelled'))
-) ENGINE=InnoDB;
+LOCK TABLES `restaurant_foods` WRITE;
+/*!40000 ALTER TABLE `restaurant_foods` DISABLE KEYS */;
+INSERT INTO `restaurant_foods` VALUES (1,3,'TS01','Trà sữa vị chanh','Trà sữa vị chanh',NULL,0,1,1,'2026-09-08 07:24:03.849834',1,'2026-09-08 07:24:03.849834'),(2,3,'TS02','Trà sữa vị đào','Trà sữa vị đào',NULL,0,1,1,'2026-09-08 07:24:21.131591',1,'2026-09-08 07:24:21.131591');
+/*!40000 ALTER TABLE `restaurant_foods` ENABLE KEYS */;
+UNLOCK TABLES;
 
--- Số lượng gửi bếp là dữ liệu suy ra, không lưu lặp trên restaurant_order_items.
--- Khi gửi bếp, application phải SELECT ... FOR UPDATE restaurant_order_items tương ứng,
--- tính RemainingQuantity và insert kitchen_order + items trong cùng transaction.
--- Cancelled/Rejected được giải phóng để có thể gửi lại; các trạng thái khác giữ chỗ.
-CREATE OR REPLACE VIEW restaurant_order_item_kitchen_quantities AS
-SELECT
-    oi.Id AS OrderItemId,
-    oi.OrderId,
-    oi.Quantity AS OrderedQuantity,
-    COALESCE(SUM(CASE
-        WHEN koi.Status NOT IN ('Cancelled', 'Rejected') THEN koi.Quantity
-        ELSE 0
-    END), 0) AS SentQuantity,
-    oi.Quantity - COALESCE(SUM(CASE
-        WHEN koi.Status NOT IN ('Cancelled', 'Rejected') THEN koi.Quantity
-        ELSE 0
-    END), 0) AS RemainingQuantity
-FROM restaurant_order_items oi
-LEFT JOIN restaurant_kitchen_order_items koi ON koi.OrderItemId = oi.Id
-GROUP BY oi.Id, oi.OrderId, oi.Quantity;
+--
+-- Table structure for table `restaurant_kitchen_order_items`
+--
 
--- ============================================================
--- 6. PAYMENTS
--- ============================================================
+DROP TABLE IF EXISTS `restaurant_kitchen_order_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_kitchen_order_items` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `KitchenOrderId` bigint unsigned NOT NULL,
+  `OrderItemId` bigint unsigned NOT NULL,
+  `Quantity` decimal(18,3) NOT NULL,
+  `Status` varchar(30) NOT NULL DEFAULT 'Pending',
+  `StartedDate` datetime(6) DEFAULT NULL,
+  `ReadyDate` datetime(6) DEFAULT NULL,
+  `CompletedDate` datetime(6) DEFAULT NULL,
+  `Note` varchar(500) DEFAULT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `UpdatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `uk_kitchen_order_items_pair` (`KitchenOrderId`,`OrderItemId`),
+  KEY `ix_kitchen_order_items_order_item` (`OrderItemId`),
+  KEY `ix_kitchen_order_items_status` (`Status`),
+  CONSTRAINT `fk_kitchen_order_items_kitchen_order` FOREIGN KEY (`KitchenOrderId`) REFERENCES `restaurant_kitchen_orders` (`Id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_kitchen_order_items_order_item` FOREIGN KEY (`OrderItemId`) REFERENCES `restaurant_order_items` (`Id`) ON DELETE CASCADE,
+  CONSTRAINT `chk_kitchen_order_items_quantity` CHECK ((`Quantity` > 0)),
+  CONSTRAINT `chk_kitchen_order_items_status` CHECK ((`Status` in (_utf8mb4'Pending',_utf8mb4'Accepted',_utf8mb4'Preparing',_utf8mb4'Ready',_utf8mb4'Completed',_utf8mb4'Rejected',_utf8mb4'Cancelled')))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE TABLE IF NOT EXISTS restaurant_payments (
-    Id                  BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    TableSessionId     BIGINT UNSIGNED NOT NULL,
-    PaymentMethod      VARCHAR(30) NOT NULL,
-    Amount              DECIMAL(18,2) NOT NULL,
-    Status              VARCHAR(30) NOT NULL DEFAULT 'Pending',
-    TransactionNo      VARCHAR(100) NULL,
-    PaidDate           DATETIME(6) NULL,
-    Note                VARCHAR(500) NULL,
-    CreatedBy          BIGINT UNSIGNED NULL,
-    CreatedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    UpdatedBy          BIGINT UNSIGNED NULL,
-    UpdatedDate        DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    KEY ix_payments_session_status (TableSessionId, Status),
-    KEY ix_payments_paid_date_status (PaidDate, Status),
-    KEY ix_payments_transaction_no (TransactionNo),
-    CONSTRAINT fk_payments_table_session
-        FOREIGN KEY (TableSessionId) REFERENCES restaurant_table_sessions(Id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT chk_payments_method CHECK (PaymentMethod IN ('Cash','Card','BankTransfer','Momo','VNPay','Other')),
-    CONSTRAINT chk_payments_status CHECK (Status IN ('Pending','Paid','Failed','Refunded','Cancelled')),
-    CONSTRAINT chk_payments_amount CHECK (Amount > 0)
-) ENGINE=InnoDB;
+--
+-- Dumping data for table `restaurant_kitchen_order_items`
+--
 
--- Một payment của lượt bàn có thể được phân bổ cho nhiều order.
--- Khi payment chuyển Paid, application phải kiểm tra trong một transaction:
--- tổng allocation = payment amount và tổng Paid của order không vượt total amount.
-CREATE TABLE IF NOT EXISTS restaurant_payment_allocations (
-    Id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    PaymentId       BIGINT UNSIGNED NOT NULL,
-    OrderId         BIGINT UNSIGNED NOT NULL,
-    Amount          DECIMAL(18,2) NOT NULL,
-    CreatedDate     DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    PRIMARY KEY (Id),
-    UNIQUE KEY uk_payment_allocations_payment_order (PaymentId, OrderId),
-    KEY ix_payment_allocations_order (OrderId),
-    CONSTRAINT fk_payment_allocations_payment
-        FOREIGN KEY (PaymentId) REFERENCES restaurant_payments(Id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT fk_payment_allocations_order
-        FOREIGN KEY (OrderId) REFERENCES restaurant_orders(Id)
-        ON DELETE RESTRICT ON UPDATE CASCADE,
-    CONSTRAINT chk_payment_allocations_amount CHECK (Amount > 0)
-) ENGINE=InnoDB;
+LOCK TABLES `restaurant_kitchen_order_items` WRITE;
+/*!40000 ALTER TABLE `restaurant_kitchen_order_items` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_kitchen_order_items` ENABLE KEYS */;
+UNLOCK TABLES;
 
-CREATE OR REPLACE VIEW restaurant_order_payment_balances AS
-SELECT
-    o.Id AS OrderId,
-    o.TableSessionId,
-    o.TotalAmount,
-    COALESCE(pa.PaidAmount, 0) AS PaidAmount,
-    GREATEST(o.TotalAmount - COALESCE(pa.PaidAmount, 0), 0) AS RemainingAmount
-FROM restaurant_orders o
-LEFT JOIN (
-    SELECT
-        a.OrderId,
-        SUM(a.Amount) AS PaidAmount
-    FROM restaurant_payment_allocations a
-    INNER JOIN restaurant_payments p ON p.Id = a.PaymentId
-    WHERE p.Status = 'Paid'
-    GROUP BY a.OrderId
-) pa ON pa.OrderId = o.Id;
+--
+-- Table structure for table `restaurant_kitchen_orders`
+--
 
-CREATE OR REPLACE VIEW restaurant_table_session_payment_balances AS
-SELECT
-    ts.Id AS TableSessionId,
-    COALESCE(ot.TotalAmount, 0) AS TotalAmount,
-    COALESCE(pt.PaidAmount, 0) AS PaidAmount,
-    GREATEST(COALESCE(ot.TotalAmount, 0) - COALESCE(pt.PaidAmount, 0), 0) AS RemainingAmount
-FROM restaurant_table_sessions ts
-LEFT JOIN (
-    SELECT TableSessionId, SUM(TotalAmount) AS TotalAmount
-    FROM restaurant_orders
-    WHERE Status <> 'Cancelled'
-    GROUP BY TableSessionId
-) ot ON ot.TableSessionId = ts.Id
-LEFT JOIN (
-    SELECT TableSessionId, SUM(Amount) AS PaidAmount
-    FROM restaurant_payments
-    WHERE Status = 'Paid'
-    GROUP BY TableSessionId
-) pt ON pt.TableSessionId = ts.Id;
+DROP TABLE IF EXISTS `restaurant_kitchen_orders`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_kitchen_orders` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `OrderId` bigint unsigned NOT NULL,
+  `KitchenNo` varchar(50) NOT NULL,
+  `Status` varchar(30) NOT NULL DEFAULT 'Pending',
+  `SentToKitchenDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `AcceptedBy` bigint unsigned DEFAULT NULL,
+  `AcceptedDate` datetime(6) DEFAULT NULL,
+  `StartedDate` datetime(6) DEFAULT NULL,
+  `ReadyDate` datetime(6) DEFAULT NULL,
+  `CompletedDate` datetime(6) DEFAULT NULL,
+  `Note` varchar(500) DEFAULT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `UpdatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `uk_kitchen_orders_kitchen_no` (`KitchenNo`),
+  KEY `ix_kitchen_orders_order` (`OrderId`),
+  KEY `ix_kitchen_orders_status_sent` (`Status`,`SentToKitchenDate`),
+  CONSTRAINT `fk_kitchen_orders_order` FOREIGN KEY (`OrderId`) REFERENCES `restaurant_orders` (`Id`) ON DELETE CASCADE,
+  CONSTRAINT `chk_kitchen_orders_status` CHECK ((`Status` in (_utf8mb4'Pending',_utf8mb4'Accepted',_utf8mb4'Preparing',_utf8mb4'Ready',_utf8mb4'Completed',_utf8mb4'Rejected',_utf8mb4'Cancelled')))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ============================================================
--- 7. OPTIONAL SEED DATA
--- ============================================================
+--
+-- Dumping data for table `restaurant_kitchen_orders`
+--
 
-INSERT INTO restaurant_areas (Code, Name, DisplayOrder)
-SELECT 'MAIN', 'Khu vực chính', 1
-WHERE NOT EXISTS (SELECT 1 FROM restaurant_areas WHERE Code = 'MAIN');
+LOCK TABLES `restaurant_kitchen_orders` WRITE;
+/*!40000 ALTER TABLE `restaurant_kitchen_orders` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_kitchen_orders` ENABLE KEYS */;
+UNLOCK TABLES;
 
-INSERT INTO restaurant_categories (Code, Name, DisplayOrder)
-SELECT 'FOOD', 'Món ăn', 1
-WHERE NOT EXISTS (SELECT 1 FROM restaurant_categories WHERE Code = 'FOOD');
+--
+-- Table structure for table `restaurant_order_items`
+--
 
-INSERT INTO restaurant_categories (Code, Name, DisplayOrder)
-SELECT 'DRINK', 'Đồ uống', 2
-WHERE NOT EXISTS (SELECT 1 FROM restaurant_categories WHERE Code = 'DRINK');
+DROP TABLE IF EXISTS `restaurant_order_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_order_items` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `OrderId` bigint unsigned NOT NULL,
+  `FoodId` bigint unsigned NOT NULL,
+  `FoodVariantId` bigint unsigned NOT NULL,
+  `FoodCode` varchar(50) NOT NULL,
+  `FoodName` varchar(200) NOT NULL,
+  `VariantName` varchar(100) NOT NULL,
+  `Quantity` decimal(18,3) NOT NULL,
+  `UnitPrice` decimal(18,2) NOT NULL,
+  `DiscountAmount` decimal(18,2) NOT NULL DEFAULT '0.00',
+  `TotalAmount` decimal(18,2) NOT NULL,
+  `Note` varchar(500) DEFAULT NULL,
+  `Status` varchar(30) NOT NULL DEFAULT 'Pending',
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `UpdatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  KEY `ix_order_items_food` (`FoodId`),
+  KEY `ix_order_items_order_status` (`OrderId`,`Status`),
+  KEY `ix_order_items_variant` (`FoodVariantId`),
+  CONSTRAINT `fk_order_items_food` FOREIGN KEY (`FoodId`) REFERENCES `restaurant_foods` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_order_items_order` FOREIGN KEY (`OrderId`) REFERENCES `restaurant_orders` (`Id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_order_items_variant` FOREIGN KEY (`FoodVariantId`) REFERENCES `restaurant_food_variants` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `chk_order_items_amounts` CHECK (((`UnitPrice` >= 0) and (`DiscountAmount` >= 0) and (`TotalAmount` >= 0))),
+  CONSTRAINT `chk_order_items_quantity` CHECK ((`Quantity` > 0)),
+  CONSTRAINT `chk_order_items_status` CHECK ((`Status` in (_utf8mb4'Pending',_utf8mb4'Accepted',_utf8mb4'Preparing',_utf8mb4'Ready',_utf8mb4'Served',_utf8mb4'Completed',_utf8mb4'Cancelled',_utf8mb4'Rejected')))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- ============================================================
--- 8. REPORT QUERY EXAMPLES
--- ============================================================
+--
+-- Dumping data for table `restaurant_order_items`
+--
 
--- A. Daily order count / sales value
--- SELECT
---     DATE(OrderedDate) AS business_date,
---     COUNT(*) AS total_orders,
---     SUM(SubtotalAmount) AS gross_sales,
---     SUM(DiscountAmount) AS total_discount,
---     SUM(TotalAmount) AS net_sales
--- FROM restaurant_orders
--- WHERE Status = 'Completed'
--- GROUP BY DATE(OrderedDate)
--- ORDER BY business_date DESC;
+LOCK TABLES `restaurant_order_items` WRITE;
+/*!40000 ALTER TABLE `restaurant_order_items` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_order_items` ENABLE KEYS */;
+UNLOCK TABLES;
 
--- B. Daily actual collected Amount
--- SELECT
---     DATE(PaidDate) AS business_date,
---     SUM(Amount) AS collected_amount
--- FROM restaurant_payments
--- WHERE Status = 'Paid'
--- GROUP BY DATE(PaidDate)
--- ORDER BY business_date DESC;
+--
+-- Table structure for table `restaurant_order_promotions`
+--
 
--- C. Best-selling restaurant_foods
--- SELECT
---     oi.FoodId,
---     oi.FoodName,
---     SUM(oi.Quantity) AS quantity_sold,
---     SUM(oi.TotalAmount) AS sales_amount
--- FROM restaurant_order_items oi
--- INNER JOIN restaurant_orders o ON o.Id = oi.OrderId
--- WHERE o.Status = 'Completed'
---   AND oi.Status <> 'Cancelled'
--- GROUP BY oi.FoodId, oi.FoodName
--- ORDER BY quantity_sold DESC;
+DROP TABLE IF EXISTS `restaurant_order_promotions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_order_promotions` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `OrderId` bigint unsigned NOT NULL,
+  `PromotionId` bigint unsigned NOT NULL,
+  `PromotionCode` varchar(50) NOT NULL,
+  `PromotionName` varchar(200) NOT NULL,
+  `DiscountAmount` decimal(18,2) NOT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `uk_order_promotions_order_promotion` (`OrderId`,`PromotionId`),
+  KEY `ix_order_promotions_promotion` (`PromotionId`),
+  CONSTRAINT `fk_order_promotions_order` FOREIGN KEY (`OrderId`) REFERENCES `restaurant_orders` (`Id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_order_promotions_promotion` FOREIGN KEY (`PromotionId`) REFERENCES `restaurant_promotion_codes` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `chk_order_promotions_discount` CHECK ((`DiscountAmount` >= 0))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 
--- D. Current occupied tables
--- SELECT
---     rt.Id,
---     rt.Code,
---     rt.Name,
---     rt.Capacity,
---     ts.Id AS TableSessionId,
---     ts.GuestCount,
---     ts.OpenedDate
--- FROM restaurant_tables rt
--- INNER JOIN restaurant_table_sessions ts
---     ON ts.TableId = rt.Id
---    AND ts.Status = 'Open'
--- WHERE rt.Status = 'Occupied';
+--
+-- Dumping data for table `restaurant_order_promotions`
+--
 
--- ============================================================
--- END
--- ============================================================
+LOCK TABLES `restaurant_order_promotions` WRITE;
+/*!40000 ALTER TABLE `restaurant_order_promotions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_order_promotions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `restaurant_order_status_histories`
+--
+
+DROP TABLE IF EXISTS `restaurant_order_status_histories`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_order_status_histories` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `OrderId` bigint unsigned NOT NULL,
+  `FromStatus` varchar(30) DEFAULT NULL,
+  `ToStatus` varchar(30) NOT NULL,
+  `Note` varchar(500) DEFAULT NULL,
+  `ChangedBy` bigint unsigned DEFAULT NULL,
+  `ChangedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  KEY `ix_order_status_histories_order_date` (`OrderId`,`ChangedDate`),
+  CONSTRAINT `fk_order_status_histories_order` FOREIGN KEY (`OrderId`) REFERENCES `restaurant_orders` (`Id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `restaurant_order_status_histories`
+--
+
+LOCK TABLES `restaurant_order_status_histories` WRITE;
+/*!40000 ALTER TABLE `restaurant_order_status_histories` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_order_status_histories` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `restaurant_orders`
+--
+
+DROP TABLE IF EXISTS `restaurant_orders`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_orders` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `OrderNo` varchar(50) NOT NULL,
+  `TableSessionId` bigint unsigned DEFAULT NULL,
+  `CustomerId` bigint unsigned DEFAULT NULL,
+  `OrderType` varchar(30) NOT NULL DEFAULT 'DineIn',
+  `Status` varchar(30) NOT NULL DEFAULT 'Pending',
+  `SubtotalAmount` decimal(18,2) NOT NULL DEFAULT '0.00',
+  `DiscountAmount` decimal(18,2) NOT NULL DEFAULT '0.00',
+  `TaxAmount` decimal(18,2) NOT NULL DEFAULT '0.00',
+  `TotalAmount` decimal(18,2) NOT NULL DEFAULT '0.00',
+  `Note` varchar(1000) DEFAULT NULL,
+  `OrderedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `CompletedDate` datetime(6) DEFAULT NULL,
+  `CreatedBy` bigint unsigned DEFAULT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `UpdatedBy` bigint unsigned DEFAULT NULL,
+  `UpdatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `ClientRequestId` char(36) NOT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `uk_orders_order_no` (`OrderNo`),
+  UNIQUE KEY `uk_orders_client_request_id` (`ClientRequestId`),
+  KEY `ix_orders_customer` (`CustomerId`),
+  KEY `ix_orders_ordered_date_status` (`OrderedDate`,`Status`),
+  KEY `ix_orders_table_session` (`TableSessionId`),
+  CONSTRAINT `fk_orders_table_session` FOREIGN KEY (`TableSessionId`) REFERENCES `restaurant_table_sessions` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `chk_orders_amounts` CHECK (((`SubtotalAmount` >= 0) and (`DiscountAmount` >= 0) and (`TaxAmount` >= 0) and (`TotalAmount` >= 0))),
+  CONSTRAINT `chk_orders_status` CHECK ((`Status` in (_utf8mb4'Draft',_utf8mb4'Pending',_utf8mb4'Confirmed',_utf8mb4'Serving',_utf8mb4'Completed',_utf8mb4'Cancelled'))),
+  CONSTRAINT `chk_orders_type` CHECK ((`OrderType` in (_utf8mb4'DineIn',_utf8mb4'TakeAway',_utf8mb4'Delivery')))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `restaurant_orders`
+--
+
+LOCK TABLES `restaurant_orders` WRITE;
+/*!40000 ALTER TABLE `restaurant_orders` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_orders` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `restaurant_payment_allocations`
+--
+
+DROP TABLE IF EXISTS `restaurant_payment_allocations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_payment_allocations` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `PaymentId` bigint unsigned NOT NULL,
+  `OrderId` bigint unsigned NOT NULL,
+  `Amount` decimal(18,2) NOT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `uk_payment_allocations_payment_order` (`PaymentId`,`OrderId`),
+  KEY `ix_payment_allocations_order` (`OrderId`),
+  CONSTRAINT `fk_payment_allocations_order` FOREIGN KEY (`OrderId`) REFERENCES `restaurant_orders` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `fk_payment_allocations_payment` FOREIGN KEY (`PaymentId`) REFERENCES `restaurant_payments` (`Id`) ON DELETE CASCADE,
+  CONSTRAINT `chk_payment_allocations_amount` CHECK ((`Amount` > 0))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `restaurant_payment_allocations`
+--
+
+LOCK TABLES `restaurant_payment_allocations` WRITE;
+/*!40000 ALTER TABLE `restaurant_payment_allocations` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_payment_allocations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `restaurant_payments`
+--
+
+DROP TABLE IF EXISTS `restaurant_payments`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_payments` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `TableSessionId` bigint unsigned NOT NULL,
+  `PaymentMethod` varchar(30) NOT NULL,
+  `Amount` decimal(18,2) NOT NULL,
+  `Status` varchar(30) NOT NULL DEFAULT 'Pending',
+  `TransactionNo` varchar(100) DEFAULT NULL,
+  `PaidDate` datetime(6) DEFAULT NULL,
+  `Note` varchar(500) DEFAULT NULL,
+  `CreatedBy` bigint unsigned DEFAULT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `UpdatedBy` bigint unsigned DEFAULT NULL,
+  `UpdatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  KEY `ix_payments_paid_date_status` (`PaidDate`,`Status`),
+  KEY `ix_payments_session_status` (`TableSessionId`,`Status`),
+  KEY `ix_payments_transaction_no` (`TransactionNo`),
+  CONSTRAINT `fk_payments_table_session` FOREIGN KEY (`TableSessionId`) REFERENCES `restaurant_table_sessions` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `chk_payments_amount` CHECK ((`Amount` > 0)),
+  CONSTRAINT `chk_payments_method` CHECK ((`PaymentMethod` in (_utf8mb4'Cash',_utf8mb4'Card',_utf8mb4'BankTransfer',_utf8mb4'Momo',_utf8mb4'VNPay',_utf8mb4'Other'))),
+  CONSTRAINT `chk_payments_status` CHECK ((`Status` in (_utf8mb4'Pending',_utf8mb4'Paid',_utf8mb4'Failed',_utf8mb4'Refunded',_utf8mb4'Cancelled')))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `restaurant_payments`
+--
+
+LOCK TABLES `restaurant_payments` WRITE;
+/*!40000 ALTER TABLE `restaurant_payments` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_payments` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `restaurant_promotion_categories`
+--
+
+DROP TABLE IF EXISTS `restaurant_promotion_categories`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_promotion_categories` (
+  `PromotionId` bigint unsigned NOT NULL,
+  `CategoryId` bigint unsigned NOT NULL,
+  PRIMARY KEY (`PromotionId`,`CategoryId`),
+  KEY `ix_promotion_categories_category` (`CategoryId`),
+  CONSTRAINT `fk_promotion_categories_category` FOREIGN KEY (`CategoryId`) REFERENCES `restaurant_categories` (`Id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_promotion_categories_promotion` FOREIGN KEY (`PromotionId`) REFERENCES `restaurant_promotion_codes` (`Id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `restaurant_promotion_categories`
+--
+
+LOCK TABLES `restaurant_promotion_categories` WRITE;
+/*!40000 ALTER TABLE `restaurant_promotion_categories` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_promotion_categories` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `restaurant_promotion_codes`
+--
+
+DROP TABLE IF EXISTS `restaurant_promotion_codes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_promotion_codes` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `Code` varchar(50) NOT NULL,
+  `Name` varchar(200) NOT NULL,
+  `Description` varchar(1000) DEFAULT NULL,
+  `DiscountType` varchar(30) NOT NULL,
+  `DiscountValue` decimal(18,2) NOT NULL,
+  `MinOrderAmount` decimal(18,2) DEFAULT NULL,
+  `MaxDiscountAmount` decimal(18,2) DEFAULT NULL,
+  `StartDate` datetime(6) NOT NULL,
+  `EndDate` datetime(6) NOT NULL,
+  `UsageLimit` int DEFAULT NULL,
+  `UsageCount` int NOT NULL DEFAULT '0',
+  `IsActive` tinyint(1) NOT NULL DEFAULT '1',
+  `CreatedBy` bigint unsigned DEFAULT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `UpdatedBy` bigint unsigned DEFAULT NULL,
+  `UpdatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `uk_promotion_codes_code` (`Code`),
+  KEY `ix_promotion_codes_validity` (`IsActive`,`StartDate`,`EndDate`),
+  CONSTRAINT `chk_promotion_codes_dates` CHECK ((`EndDate` > `StartDate`)),
+  CONSTRAINT `chk_promotion_codes_type` CHECK ((`DiscountType` in (_utf8mb4'Percentage',_utf8mb4'FixedAmount'))),
+  CONSTRAINT `chk_promotion_codes_usage` CHECK (((`UsageLimit` is null) or (`UsageLimit` >= 0))),
+  CONSTRAINT `chk_promotion_codes_usage_count` CHECK ((`UsageCount` >= 0)),
+  CONSTRAINT `chk_promotion_codes_value` CHECK ((`DiscountValue` > 0))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `restaurant_promotion_codes`
+--
+
+LOCK TABLES `restaurant_promotion_codes` WRITE;
+/*!40000 ALTER TABLE `restaurant_promotion_codes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_promotion_codes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `restaurant_promotion_foods`
+--
+
+DROP TABLE IF EXISTS `restaurant_promotion_foods`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_promotion_foods` (
+  `PromotionId` bigint unsigned NOT NULL,
+  `FoodId` bigint unsigned NOT NULL,
+  PRIMARY KEY (`PromotionId`,`FoodId`),
+  KEY `ix_promotion_foods_food` (`FoodId`),
+  CONSTRAINT `fk_promotion_foods_food` FOREIGN KEY (`FoodId`) REFERENCES `restaurant_foods` (`Id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_promotion_foods_promotion` FOREIGN KEY (`PromotionId`) REFERENCES `restaurant_promotion_codes` (`Id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `restaurant_promotion_foods`
+--
+
+LOCK TABLES `restaurant_promotion_foods` WRITE;
+/*!40000 ALTER TABLE `restaurant_promotion_foods` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_promotion_foods` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `restaurant_rate_limit_policies`
+--
+
+DROP TABLE IF EXISTS `restaurant_rate_limit_policies`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_rate_limit_policies` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `Name` varchar(100) NOT NULL,
+  `RoutePattern` varchar(255) NOT NULL,
+  `HttpMethods` varchar(100) DEFAULT NULL,
+  `PartitionBy` varchar(100) NOT NULL,
+  `Algorithm` varchar(30) NOT NULL,
+  `PermitLimit` int unsigned NOT NULL,
+  `WindowSeconds` int unsigned NOT NULL,
+  `BurstLimit` int unsigned DEFAULT NULL,
+  `Priority` int NOT NULL,
+  `IsActive` tinyint(1) NOT NULL,
+  `IsDeleted` tinyint(1) NOT NULL,
+  `Version` bigint unsigned NOT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `IX_rate_limit_policies_Name` (`Name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `restaurant_rate_limit_policies`
+--
+
+LOCK TABLES `restaurant_rate_limit_policies` WRITE;
+/*!40000 ALTER TABLE `restaurant_rate_limit_policies` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_rate_limit_policies` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `restaurant_table_sessions`
+--
+
+DROP TABLE IF EXISTS `restaurant_table_sessions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_table_sessions` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `TableId` bigint unsigned NOT NULL,
+  `GuestCount` int NOT NULL DEFAULT '1',
+  `Status` varchar(30) NOT NULL DEFAULT 'Open',
+  `OpenedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `ClosedDate` datetime(6) DEFAULT NULL,
+  `OpenedBy` bigint unsigned DEFAULT NULL,
+  `ClosedBy` bigint unsigned DEFAULT NULL,
+  `Note` varchar(500) DEFAULT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `UpdatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  KEY `ix_table_sessions_opened_date` (`OpenedDate`),
+  KEY `ix_table_sessions_table_status` (`TableId`,`Status`),
+  CONSTRAINT `fk_table_sessions_table` FOREIGN KEY (`TableId`) REFERENCES `restaurant_tables` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `chk_table_sessions_guest_count` CHECK ((`GuestCount` > 0)),
+  CONSTRAINT `chk_table_sessions_status` CHECK ((`Status` in (_utf8mb4'Open',_utf8mb4'Closed',_utf8mb4'Cancelled')))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `restaurant_table_sessions`
+--
+
+LOCK TABLES `restaurant_table_sessions` WRITE;
+/*!40000 ALTER TABLE `restaurant_table_sessions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_table_sessions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `restaurant_tables`
+--
+
+DROP TABLE IF EXISTS `restaurant_tables`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `restaurant_tables` (
+  `Id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `AreaId` bigint unsigned NOT NULL,
+  `Code` varchar(50) NOT NULL,
+  `Name` varchar(150) NOT NULL,
+  `Capacity` int NOT NULL,
+  `Status` varchar(30) NOT NULL DEFAULT 'Available',
+  `IsActive` tinyint(1) NOT NULL DEFAULT '1',
+  `CreatedBy` bigint unsigned DEFAULT NULL,
+  `CreatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `UpdatedBy` bigint unsigned DEFAULT NULL,
+  `UpdatedDate` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `uk_restaurant_tables_code` (`Code`),
+  KEY `ix_restaurant_tables_area_status` (`AreaId`,`Status`,`IsActive`),
+  CONSTRAINT `fk_restaurant_tables_area` FOREIGN KEY (`AreaId`) REFERENCES `restaurant_areas` (`Id`) ON DELETE RESTRICT,
+  CONSTRAINT `chk_restaurant_tables_capacity` CHECK ((`Capacity` > 0)),
+  CONSTRAINT `chk_restaurant_tables_status` CHECK ((`Status` in (_utf8mb4'Available',_utf8mb4'Occupied',_utf8mb4'Reserved',_utf8mb4'Cleaning',_utf8mb4'Disabled')))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `restaurant_tables`
+--
+
+LOCK TABLES `restaurant_tables` WRITE;
+/*!40000 ALTER TABLE `restaurant_tables` DISABLE KEYS */;
+/*!40000 ALTER TABLE `restaurant_tables` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-09-09 13:33:17
